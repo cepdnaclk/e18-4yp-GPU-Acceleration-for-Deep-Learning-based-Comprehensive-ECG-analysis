@@ -90,3 +90,8 @@ with mlflow.start_run():
     mlflow.pytorch.save_model(model, model_path)
 
 print('Finished Training')
+
+# create a backup of mlruns in babbage server
+# "Turing is not stable, data could be lost" - Akila E17
+import os
+os.system("cp -r mlruns ~/4yp/")
