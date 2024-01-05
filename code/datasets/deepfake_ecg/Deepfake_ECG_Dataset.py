@@ -17,7 +17,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         filename= self.ground_truths['patid'].values[index]
-        ecg_signals = pandas.read_csv(f'datasets/deepfake_ecg/121977_data/{filename}.asc',header=None, sep=" ")
+        ecg_signals = pandas.read_csv(f'datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc',header=None, sep=" ")
         
         ecg_signals = torch.tensor(ecg_signals.values) # convert dataframe values to tensor
         
@@ -36,6 +36,6 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         return ecg_signals, heart_rate
 
     def __len__(self):
-        return 100
-        # return self.ground_truths.shape[0]
+        # return 1000
+        return self.ground_truths.shape[0]
     

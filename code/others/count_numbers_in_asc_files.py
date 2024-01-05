@@ -5,7 +5,7 @@ from tqdm import tqdm
 Check if all the asc files have 40k numbers in them
 """
 
-data_path = '../datasets/deepfake_ecg/121977_data/'
+data_path = '../datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/'
 files = os.listdir(data_path)
 
 for file_name in tqdm(files):
