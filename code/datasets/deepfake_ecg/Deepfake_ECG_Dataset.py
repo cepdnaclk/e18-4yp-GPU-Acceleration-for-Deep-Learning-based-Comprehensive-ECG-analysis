@@ -2,7 +2,12 @@ import torch
 import pandas
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
-    """Some Information about MyDataset"""
+    """
+    Deepfake ECG dataset filtered to only include normal ECGs
+    Contains 121977 ECGs
+    ECG signals are returned as a 1D tensor (40k numbers)
+    Parameters are returned as a 1D tensor
+    """
     def __init__(self):
         super(Deepfake_ECG_Dataset, self).__init__()
         

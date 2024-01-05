@@ -12,7 +12,7 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.001
-num_epochs = 5
+num_epochs = 50
 train_fraction = 0.8
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -81,8 +81,6 @@ with mlflow.start_run():
             mlflow.log_metric("val_loss", running_loss / len(val_dataloader), step=epoch)
         
         print(f'Epoch: {epoch} val_loss: {running_loss / len(val_dataloader)}')
-
-    print(f'Epoch: {epoch} Loss: {running_loss}')
 
     # Save the trained model with date and time in the path
     current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
