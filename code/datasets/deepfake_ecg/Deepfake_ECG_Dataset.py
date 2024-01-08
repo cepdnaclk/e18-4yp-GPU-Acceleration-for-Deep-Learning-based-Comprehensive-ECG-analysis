@@ -26,32 +26,39 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # calculate HR
         self.heart_rate = 60 * 1000 / RR
 
+        # Dictionary to store loaded ASC files
+        self.loaded_asc_files = {}
+
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
-        ecg_signals = pandas.read_csv(
-            f"datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
-            header=None,
-            sep=" ",
-        )
 
-        ecg_signals = torch.tensor(
-            ecg_signals.values
-        )  # convert dataframe values to tensor
+        # Check if the ASC file is already loaded
+        if filename in self.loaded_asc_files:
+            ecg_signals = self.loaded_asc_files[filename]
+        else:
+            # Load the ASC file
+            ecg_signals = pandas.read_csv(
+                f"datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
+                header=None,
+                sep=" ",
+            )
 
-        ecg_signals = ecg_signals.float()
+            # Convert dataframe values to tensor
+            ecg_signals = torch.tensor(ecg_signals.values)
+            ecg_signals = ecg_signals.float()
+            ecg_signals = ecg_signals.reshape(-1)
 
-        ecg_signals = ecg_signals.reshape(-1)
+            # Transposing the ECG signals
+            ecg_signals = ecg_signals / 3500  # normalization
+            ecg_signals = ecg_signals.t()
 
-        # Transposing the ecg signals
-        # ecg_signals = ecg_signals/6000 # normalization
-        ecg_signals = ecg_signals.t()
-
-        # Reshape ecg_signals into a 1D array
+            # Store the loaded ASC file in the dictionary
+            self.loaded_asc_files[filename] = ecg_signals
 
         heart_rate = self.heart_rate[index].reshape(-1)
 
         return ecg_signals, heart_rate
 
     def __len__(self):
-        # return 5000
-        return self.ground_truths.shape[0]
+        return 1000
+        # return self.ground_truths.shape[0]
