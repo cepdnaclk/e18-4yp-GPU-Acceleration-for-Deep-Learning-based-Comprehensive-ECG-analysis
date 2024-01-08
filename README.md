@@ -1,5 +1,5 @@
 ___
-# DELETE THIS INSTRUCTIONS AND ADD A SHORT INTRODUCTION ABOUT YOUR PROJECT
+# GPU Acceleration for Deep-Learning based Comprehensive ECG analysis
 ___
 
 ## Please refer the instructions in below URL:
