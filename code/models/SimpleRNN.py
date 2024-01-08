@@ -6,7 +6,7 @@ class SimpleRNN(nn.Module):
         super(SimpleRNN, self).__init__()
         self.rnn1 = nn.RNN(40000, 100, batch_first=True)
         self.relu = nn.ReLU()
-        self.rnn2 = nn.RNN(10, 1, batch_first=True)
+        # self.rnn2 = nn.RNN(10, 1, batch_first=True)
         self.MLP = nn.Sequential(
             nn.Linear(100, 10),
             nn.ReLU(),

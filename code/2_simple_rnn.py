@@ -12,7 +12,7 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 50
+num_epochs = 200
 train_fraction = 0.8
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -43,7 +43,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
 
 # MLflow setup
-mlflow.set_experiment("SimpleNeuralNetwork")
+mlflow.set_experiment("SimpleRNN")
 with mlflow.start_run():
     # Log hyperparameters
     mlflow.log_param("batch_size", batch_size)
