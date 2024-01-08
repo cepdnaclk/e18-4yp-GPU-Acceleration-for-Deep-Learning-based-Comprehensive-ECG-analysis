@@ -27,3 +27,7 @@ for file_name in tqdm(files):
 
 print(f"Min: {minValue}")
 print(f"Max: {maxValue}")
+
+# Output
+# Min: -3713.0
+# Max: 3929.0
