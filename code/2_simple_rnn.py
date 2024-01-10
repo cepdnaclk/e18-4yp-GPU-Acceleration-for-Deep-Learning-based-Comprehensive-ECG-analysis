@@ -58,7 +58,7 @@ criterion = nn.L1Loss()
 # Training loop
 for epoch in range(num_epochs):
     model.train()
-    running_loss = 0.0
+    train_loss = 0.0
     for i, data in tqdm(
         enumerate(train_dataloader, 0),
         total=len(train_dataloader),
@@ -73,15 +73,11 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        running_loss += loss.item()
-
-    # Log metrics
-    wandb.log({"train_loss": running_loss / len(train_dataloader)})
-    print(f"Epoch: {epoch} train_loss: {running_loss / len(train_dataloader)}")
+        train_loss += loss.item()
 
     # Validation loop
     model.eval()
-    running_loss = 0.0
+    val_loss = 0.0
     with torch.no_grad():
         for i, data in tqdm(
             enumerate(val_dataloader, 0),
@@ -97,12 +93,18 @@ for epoch in range(num_epochs):
             #         print(f"Predicted: {outputs[x]} Real: {labels[x]}")
             loss = criterion(outputs, labels)
 
-            running_loss += loss.item()
+            val_loss += loss.item()
 
-        # Log metrics
-        wandb.log({"val_loss": running_loss / len(val_dataloader)})
+    #  Log metrics
+    wandb.log(
+        {
+            "train_loss": train_loss / len(train_dataloader),
+            "val_loss": val_loss / len(val_dataloader),
+        }
+    )
 
-    print(f"Epoch: {epoch} val_loss: {running_loss / len(val_dataloader)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
+    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
