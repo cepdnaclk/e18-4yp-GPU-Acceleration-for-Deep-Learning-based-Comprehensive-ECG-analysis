@@ -60,5 +60,5 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         return ecg_signals, heart_rate
 
     def __len__(self):
-        return 1000
-        # return self.ground_truths.shape[0]
+        # return 1000
+        return self.ground_truths.shape[0]
