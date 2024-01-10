@@ -10,6 +10,7 @@ if [ "$response" = "YES" ] ; then
     # Delete the directories
     rm -rf mlruns
     rm -rf saved_models
+    rm -rf wandb
     echo "Directories deleted."
 else
     echo "Operation canceled."
