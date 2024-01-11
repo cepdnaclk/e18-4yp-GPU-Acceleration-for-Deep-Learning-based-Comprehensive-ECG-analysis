@@ -7,12 +7,17 @@ import os
 
 from models.SimpleLSTM import SimpleLSTM
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
+from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
+from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
+from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
+from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
 num_epochs = 1000
 train_fraction = 0.8
+parameter = HR_PARAMETER
 
 # start a new wandb run to track this script
 wandb.init(
@@ -33,7 +38,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM().to(device)
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset()
+dataset = Deepfake_ECG_Dataset(parameter=parameter)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))

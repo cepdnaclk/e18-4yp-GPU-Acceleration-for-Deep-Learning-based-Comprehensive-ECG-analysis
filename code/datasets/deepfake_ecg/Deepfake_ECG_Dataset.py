@@ -1,6 +1,11 @@
 import torch
 import pandas
 
+HR_PARAMETER = "hr"
+QRS_PARAMETER = "qrs"
+PR_PARAMETER = "pr"
+QT_PARAMETER = "qt"
+
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     """
@@ -10,21 +15,35 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     Parameters are returned as a 1D tensor
     """
 
-    def __init__(self):
+    def __init__(self, parameter=None):
         super(Deepfake_ECG_Dataset, self).__init__()
+
+        if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
+            raise ValueError("Invalid parameter")
 
         # load the ground truth labels
         self.ground_truths = pandas.read_csv(
             "datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
         )
 
-        # TODO: take the column name as input and use it to select the column
-        # hardcode for now to only get the HR
-        RR = torch.tensor(
-            self.ground_truths["avgrrinterval"].values, dtype=torch.float32
-        )
-        # calculate HR
-        self.heart_rate = 60 * 1000 / RR
+        if parameter == HR_PARAMETER:
+            parameter = torch.tensor(
+                self.ground_truths["avgrrinterval"].values, dtype=torch.float32
+            )
+            # calculate HR
+            self.parameter = 60 * 1000 / parameter
+        elif parameter == QRS_PARAMETER:
+            self.parameter = torch.tensor(
+                self.ground_truths["qrs"].values, dtype=torch.float32
+            )
+        elif parameter == PR_PARAMETER:
+            self.parameter = torch.tensor(
+                self.ground_truths["pr"].values, dtype=torch.float32
+            )
+        elif parameter == QT_PARAMETER:
+            self.parameter = torch.tensor(
+                self.ground_truths["qt"].values, dtype=torch.float32
+            )
 
         # Dictionary to store loaded ASC files
         self.loaded_asc_files = {}
@@ -55,9 +74,9 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             # Store the loaded ASC file in the dictionary
             self.loaded_asc_files[filename] = ecg_signals
 
-        heart_rate = self.heart_rate[index].reshape(-1)
+        parameter = self.parameter[index].reshape(-1)
 
-        return ecg_signals, heart_rate
+        return ecg_signals, parameter
 
     def __len__(self):
         # return 1000
