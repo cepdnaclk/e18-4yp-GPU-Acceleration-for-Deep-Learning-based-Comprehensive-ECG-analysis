@@ -29,6 +29,7 @@ wandb.init(
         "architecture": os.path.basename(__file__),
         "dataset": "Deepfake_ECG_Dataset",
         "epochs": num_epochs,
+        "parameter": parameter,
     },
 )
 
