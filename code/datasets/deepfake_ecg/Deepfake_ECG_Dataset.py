@@ -1,6 +1,21 @@
 import torch
 import pandas
 
+import socket
+
+# decide to run the full dataset or no based on the server or local machine
+hostname = socket.gethostname()
+
+server_hostnames = ["ampere", "turing", "aiken"]
+if hostname in server_hostnames:
+    # run full dataset on servers
+    IS_FULL_DATASET = True
+    print("Running full dataset")
+else:
+    # limit to 1000 on local computers
+    IS_FULL_DATASET = False
+    print("Running limited dataset")
+
 HR_PARAMETER = "hr"
 QRS_PARAMETER = "qrs"
 PR_PARAMETER = "pr"
@@ -62,9 +77,15 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 sep=" ",
             )
 
-            # Convert dataframe values to tensor
-            ecg_signals = torch.tensor(ecg_signals.values)
-            ecg_signals = ecg_signals.float()
+            # files have 8 columns, each column has one lead
+            # extract each lead and flatten it
+            # then append the flattened lead to allData so that allData has lead1, lead2, lead3, etc. one after the other
+            allData = []
+            for column in ecg_signals.columns:
+                ecg_array = ecg_signals[column].values
+                flattened_array = ecg_array.flatten()
+                allData.extend(flattened_array)
+            ecg_signals = torch.tensor(allData, dtype=torch.float32)
             ecg_signals = ecg_signals.reshape(-1)
 
             # Transposing the ECG signals
@@ -79,5 +100,9 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         return ecg_signals, parameter
 
     def __len__(self):
-        # return 1000
-        return self.ground_truths.shape[0]
+        if IS_FULL_DATASET:
+            # run full dataset on servers
+            return self.ground_truths.shape[0]
+
+        # limit to 1000 on local computers
+        return 1000
