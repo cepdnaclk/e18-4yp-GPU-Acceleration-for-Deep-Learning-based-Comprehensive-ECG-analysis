@@ -30,7 +30,7 @@ class ECGDataset(Dataset):
         return len(self.Y)
 
     def __getitem__(self, idx):
-        x = torch.Tensor(self.X[idx])  # Assuming X is a NumPy array
+        x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
         diagnostic_superclass = self.Y['diagnostic_superclass'].iloc[idx]
         y = torch.tensor([1 if label in diagnostic_superclass else 0 for label in ["NORM"]], dtype=torch.float32)
         # y = torch.tensor(self.Y['diagnostic_superclass'].iloc[idx], dtype=torch.long) # this is a text as NORM... (normal or not)
