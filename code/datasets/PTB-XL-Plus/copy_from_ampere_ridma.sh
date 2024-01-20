@@ -1,0 +1,1 @@
+rsync -avz -e "ssh -J e18155@aiken.ce.pdn.ac.lk" e18155@10.40.18.10:/storage/scratch1/e18-4yp-comp-ecg-analysis/datasets/PTB-XL-Plus/ .
