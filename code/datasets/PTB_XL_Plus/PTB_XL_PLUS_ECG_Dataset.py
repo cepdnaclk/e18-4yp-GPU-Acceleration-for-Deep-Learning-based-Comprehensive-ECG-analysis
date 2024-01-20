@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 import wfdb
 import numpy as np
 from datetime import datetime
+from tqdm import tqdm
 
 HR_PARAMETER = "hr"
 QRS_PARAMETER = "qrs"
@@ -18,10 +19,10 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
 
-        path_to_ptb_xl_dataset = "./datasets/PTB-XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"  # this path might need to be changed if XL dataset is restructured
+        path_to_ptb_xl_dataset = "./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"  # this path might need to be changed if XL dataset is restructured
         ptb_xl_file_names_database_csv = "ptbxl_database.csv"
-        path_to_ptb_xl_plus_features = "./datasets/PTB-XL-Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/features/12sl_features.csv"  # these two also need to be changed if this .py file is taken outsite this folder
-        path_to_ptb_xl_plus_statements = "./datasets/PTB-XL-Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/labels/ptbxl_statements.csv"  # have to check whether this is  12sl_statements  or ptbxl_statements |'scp_codes' vs 'statements'
+        path_to_ptb_xl_plus_features = "./datasets/PTB_XL_Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/features/12sl_features.csv"  # these two also need to be changed if this .py file is taken outsite this folder
+        path_to_ptb_xl_plus_statements = "./datasets/PTB_XL_Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/labels/ptbxl_statements.csv"  # have to check whether this is  12sl_statements  or ptbxl_statements |'scp_codes' vs 'statements'
 
         self.features_df = pd.read_csv(path_to_ptb_xl_plus_features)
         self.statements_df = pd.read_csv(path_to_ptb_xl_plus_statements)
@@ -47,7 +48,11 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         # is it needed to check the directory for existance of files related to filename_hr
 
         self.X = []
-        for index, row in self.features_df.iterrows():
+        for index, row in tqdm(
+            self.features_df.iterrows(),
+            total=len(self.features_df),
+            desc="Reading data files",
+        ):
             ecg_id = row["ecg_id"]
             matching_row = self.data_file_names_df[
                 self.data_file_names_df["ecg_id"] == ecg_id
@@ -107,7 +112,7 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
     def __getitem__(self, idx):
         x = self.X[idx]
         y = self.y[idx]
-        return x, y
+        return x, y.reshape(-1)
 
 
 if __name__ == "__main__":

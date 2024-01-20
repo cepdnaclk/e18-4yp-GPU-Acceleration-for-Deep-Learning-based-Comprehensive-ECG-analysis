@@ -6,18 +6,18 @@ import wandb
 import os
 
 from models.SimpleECGViT import SimpleECGViT
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import HR_PARAMETER
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import QRS_PARAMETER
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PR_PARAMETER
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import QT_PARAMETER
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
-parameter = QT_PARAMETER
+parameter = HR_PARAMETER
 
 # start a new wandb run to track this script
 wandb.init(
@@ -27,7 +27,7 @@ wandb.init(
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
-        "dataset": "Deepfake_ECG_Dataset",
+        "dataset": "PTB_XL_PLUS_ECG_Dataset",
         "epochs": num_epochs,
         "parameter": parameter,
     },
@@ -39,7 +39,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleECGViT(input_size=40000, sequence_length=5000).to(device)
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset(parameter=parameter)
+dataset = PTB_XL_PLUS_ECGDataset(parameter=parameter)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
