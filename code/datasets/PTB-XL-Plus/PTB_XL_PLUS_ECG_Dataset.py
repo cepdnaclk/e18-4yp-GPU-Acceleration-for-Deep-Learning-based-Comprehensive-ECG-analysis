@@ -18,10 +18,10 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
 
-        path_to_ptb_xl_dataset = "../../PTB-XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"  # this path might need to be changed if XL dataset is restructured
+        path_to_ptb_xl_dataset = "./datasets/PTB-XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"  # this path might need to be changed if XL dataset is restructured
         ptb_xl_file_names_database_csv = "ptbxl_database.csv"
-        path_to_ptb_xl_plus_features = "./features/12sl_features.csv"  # these two also need to be changed if this .py file is taken outsite this folder
-        path_to_ptb_xl_plus_statements = "./labels/ptbxl_statements.csv"  # have to check whether this is  12sl_statements  or ptbxl_statements |'scp_codes' vs 'statements'
+        path_to_ptb_xl_plus_features = "./datasets/PTB-XL-Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/features/12sl_features.csv"  # these two also need to be changed if this .py file is taken outsite this folder
+        path_to_ptb_xl_plus_statements = "./datasets/PTB-XL-Plus/ptb-xl-a-comprehensive-electrocardiographic-feature-dataset-1.0.1/labels/ptbxl_statements.csv"  # have to check whether this is  12sl_statements  or ptbxl_statements |'scp_codes' vs 'statements'
 
         self.features_df = pd.read_csv(path_to_ptb_xl_plus_features)
         self.statements_df = pd.read_csv(path_to_ptb_xl_plus_statements)
