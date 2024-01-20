@@ -81,30 +81,23 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         )  # in case if there were no matching rows and dropped features from line no 70
 
         if parameter == HR_PARAMETER:
-            self.features_df = self.features_df.dropna(subset=["RR_Mean_Global"])
-            hr_torch = torch.tensor(
-                self.features_df["RR_Mean_Global"].values, dtype=torch.float32
-            )
-            # calculate HR
+            rr_mean_global_series = self.features_df['RR_Mean_Global']
+            hr_torch = torch.tensor(rr_mean_global_series.values, dtype=torch.float32)
+            # Calculate HR
             self.y = 60 * 1000 / hr_torch
 
-        elif parameter == QRS_PARAMETER:
-            self.features_df = self.features_df.dropna(subset=["QRS_Dur_Global"])
-            self.y = torch.tensor(
-                self.features_df["QRS_Dur_Global"].values, dtype=torch.float32
-            )
+        if parameter == QRS_PARAMETER:
+            qrs_dur_series = self.features_df['QRS_Dur_Global']
+            self.y = torch.tensor(qrs_dur_series.values, dtype=torch.float32)
 
         elif parameter == PR_PARAMETER:
-            self.features_df = self.features_df.dropna(subset=["QT_Int_Global"])
-            self.y = torch.tensor(
-                self.features_df["QT_Int_Global"].values, dtype=torch.float32
-            )
+            qt_int_series = self.features_df['QT_Int_Global']
+            self.y = torch.tensor(qt_int_series.values, dtype=torch.float32)
 
         elif parameter == QT_PARAMETER:
-            self.features_df = self.features_df.dropna(subset=["PR_Int_Global"])
-            self.y = torch.tensor(
-                self.features_df["PR_Int_Global"].values, dtype=torch.float32
-            )
+            pr_int_series = self.features_df['PR_Int_Global']
+            self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
+
 
     def __len__(self):
         return len(self.y)
