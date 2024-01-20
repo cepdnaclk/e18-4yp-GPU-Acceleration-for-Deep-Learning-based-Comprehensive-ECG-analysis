@@ -6,6 +6,8 @@ import mlflow
 import mlflow.pytorch
 import datetime
 
+# TODO: Replace mlflow with wandb
+
 from models.SimpleNeuralNetwork import SimpleNeuralNetwork
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER

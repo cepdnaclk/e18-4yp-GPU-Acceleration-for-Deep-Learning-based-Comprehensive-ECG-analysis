@@ -1,16 +1,5 @@
 # ignore the datasets folder
-datasets/**/*.csv
-datasets/**/*.asc
-datasets/**/**/*.txt
-datasets/**/**/*.csv
-datasets/**/**/RECORDS
-datasets/**/**/records100
-datasets/**/**/records500
-datasets/**/**/example_physionet.py
-datasets/**/**/features
-datasets/**/**/fiducial_points
-datasets/**/**/labels
-datasets/**/**/median_beats
+
 saved_models/*
 wandb/
 
