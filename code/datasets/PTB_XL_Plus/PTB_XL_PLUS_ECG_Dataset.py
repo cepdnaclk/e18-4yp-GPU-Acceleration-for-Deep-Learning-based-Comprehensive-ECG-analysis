@@ -64,14 +64,14 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                     file_path, channels=[0, 1, 6, 7, 8, 9, 10, 11]
                 )  # _ meta data from hea file is ignored
                 flattened_data = data.flatten()
-                # TODO : normalization to be done
+
+                # normalization
+                flattened_data = flattened_data / 27
+                
+                flattened_data = torch.tensor(flattened_data, dtype=torch.float32)
                 self.X.append(flattened_data)
             else:
                 self.features_df.drop(index=index)
-
-        self.X = torch.tensor(
-            self.X, dtype=torch.float32
-        )  # there is a waring saying this is slow. but we need them as separate tensors so...
 
         current_time = datetime.now().strftime("%I:%M:%S %p")
         print(f"{current_time} - big stuff read done")
@@ -81,23 +81,22 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         )  # in case if there were no matching rows and dropped features from line no 70
 
         if parameter == HR_PARAMETER:
-            rr_mean_global_series = self.features_df['RR_Mean_Global']
+            rr_mean_global_series = self.features_df["RR_Mean_Global"]
             hr_torch = torch.tensor(rr_mean_global_series.values, dtype=torch.float32)
             # Calculate HR
             self.y = 60 * 1000 / hr_torch
 
         if parameter == QRS_PARAMETER:
-            qrs_dur_series = self.features_df['QRS_Dur_Global']
+            qrs_dur_series = self.features_df["QRS_Dur_Global"]
             self.y = torch.tensor(qrs_dur_series.values, dtype=torch.float32)
 
         elif parameter == PR_PARAMETER:
-            qt_int_series = self.features_df['QT_Int_Global']
+            qt_int_series = self.features_df["QT_Int_Global"]
             self.y = torch.tensor(qt_int_series.values, dtype=torch.float32)
 
         elif parameter == QT_PARAMETER:
-            pr_int_series = self.features_df['PR_Int_Global']
+            pr_int_series = self.features_df["PR_Int_Global"]
             self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
-
 
     def __len__(self):
         return len(self.y)
