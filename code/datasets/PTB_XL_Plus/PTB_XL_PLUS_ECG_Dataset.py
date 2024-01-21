@@ -67,14 +67,11 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
                 # normalization
                 flattened_data = flattened_data / 27
-                
+
                 flattened_data = torch.tensor(flattened_data, dtype=torch.float32)
                 self.X.append(flattened_data)
             else:
                 self.features_df.drop(index=index)
-
-        current_time = datetime.now().strftime("%I:%M:%S %p")
-        print(f"{current_time} - big stuff read done")
 
         self.features_df.reset_index(
             drop=True, inplace=True
