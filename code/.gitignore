@@ -1,6 +1,4 @@
 # ignore the datasets folder
-
-saved_models/*
 wandb/
 
 # Byte-compiled / optimized / DLL files
