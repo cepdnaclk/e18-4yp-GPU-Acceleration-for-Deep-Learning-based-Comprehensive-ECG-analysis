@@ -1,6 +1,7 @@
 import torch
 import pandas
 from scipy.signal import spectrogram
+import numpy as np
 
 import socket
 
@@ -25,6 +26,7 @@ QT_PARAMETER = "qt"
 DEFAULT_OUTPUT_TYPE = "default"
 DEFAULT_SPECTROGRAM_OUTPUT_TYPE = "spectrogram"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE = "vision_transformer_image"
+
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     """
@@ -68,6 +70,20 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # Dictionary to store loaded ASC files
         self.loaded_asc_files = {}
 
+    def connect_ecgs_one_after_the_other(self, ecg_signals):
+        # files have 8 columns, each column has one lead
+        # extract each lead and flatten it
+        # then append the flattened lead to allData so that allData has lead1, lead2, lead3, etc. one after the other
+        allData = []
+        for column in ecg_signals.columns:
+            ecg_array = ecg_signals[column].values
+            flattened_array = ecg_array.flatten()
+            allData.extend(flattened_array)
+        ecg_signals = torch.tensor(allData, dtype=torch.float32)
+        ecg_signals = ecg_signals.reshape(-1)
+
+        return ecg_signals
+
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
 
@@ -82,29 +98,22 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 sep=" ",
             )
 
-            # files have 8 columns, each column has one lead
-            # extract each lead and flatten it
-            # then append the flattened lead to allData so that allData has lead1, lead2, lead3, etc. one after the other
-            allData = []
-            for column in ecg_signals.columns:
-                ecg_array = ecg_signals[column].values
-                flattened_array = ecg_array.flatten()
-                allData.extend(flattened_array)
-            ecg_signals = torch.tensor(allData, dtype=torch.float32)
-            ecg_signals = ecg_signals.reshape(-1)
-
             if self.output_type == DEFAULT_OUTPUT_TYPE:
-                # Transposing the ECG signals
+                ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
                 ecg_signals = ecg_signals / 3500  # normalization
+                # Transposing the ECG signals
                 ecg_signals = ecg_signals.t()
             elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
+                ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
                 _, _, Sxx = spectrogram(ecg_signals, 500)
-                # Sxx = 10 * np.log10(Sxx)
+
+                # change 0 values to 1 to avoid log(0) error
+                Sxx[Sxx == 0] = 0.01
+
+                Sxx = 10 * np.log10(Sxx)
                 ecg_signals = Sxx.reshape(-1)
             elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
-                _, _, Sxx = spectrogram(ecg_signals, 500)
-                # Sxx = 10 * np.log10(Sxx)
-                ecg_signals = Sxx.reshape(1, 129, 129)
+                raise ValueError("Vision Transformer not supported yet")
 
             # Store the loaded ASC file in the dictionary
             self.loaded_asc_files[filename] = ecg_signals
