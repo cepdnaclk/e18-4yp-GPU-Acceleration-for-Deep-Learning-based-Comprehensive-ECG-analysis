@@ -1,5 +1,6 @@
 import torch
 import pandas
+from scipy.signal import spectrogram
 
 import socket
 
@@ -21,6 +22,9 @@ QRS_PARAMETER = "qrs"
 PR_PARAMETER = "pr"
 QT_PARAMETER = "qt"
 
+DEFAULT_OUTPUT_TYPE = "default"
+DEFAULT_SPECTROGRAM_OUTPUT_TYPE = "spectrogram"
+VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE = "vision_transformer_image"
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     """
@@ -30,8 +34,9 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     Parameters are returned as a 1D tensor
     """
 
-    def __init__(self, parameter=None):
+    def __init__(self, parameter=None, output_type=DEFAULT_OUTPUT_TYPE):
         super(Deepfake_ECG_Dataset, self).__init__()
+        self.output_type = output_type
 
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
@@ -88,9 +93,18 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = torch.tensor(allData, dtype=torch.float32)
             ecg_signals = ecg_signals.reshape(-1)
 
-            # Transposing the ECG signals
-            ecg_signals = ecg_signals / 3500  # normalization
-            ecg_signals = ecg_signals.t()
+            if self.output_type == DEFAULT_OUTPUT_TYPE:
+                # Transposing the ECG signals
+                ecg_signals = ecg_signals / 3500  # normalization
+                ecg_signals = ecg_signals.t()
+            elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
+                _, _, Sxx = spectrogram(ecg_signals, 500)
+                # Sxx = 10 * np.log10(Sxx)
+                ecg_signals = Sxx.reshape(-1)
+            elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
+                _, _, Sxx = spectrogram(ecg_signals, 500)
+                # Sxx = 10 * np.log10(Sxx)
+                ecg_signals = Sxx.reshape(1, 129, 129)
 
             # Store the loaded ASC file in the dictionary
             self.loaded_asc_files[filename] = ecg_signals

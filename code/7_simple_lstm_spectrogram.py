@@ -7,20 +7,14 @@ import os
 import utils.current_server as current_server
 
 from models.SimpleLSTM import SimpleLSTM
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset_Spectrogram import (
-    Deepfake_ECG_Dataset_Spectrogram,
-)
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset_Spectrogram import HR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset_Spectrogram import QRS_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset_Spectrogram import PR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset_Spectrogram import QT_PARAMETER
+import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_dataset
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
 num_epochs = 200
 train_fraction = 0.8
-parameter = HR_PARAMETER
+parameter = deepfake_dataset.HR_PARAMETER
 
 # start a new wandb run to track this script
 wandb.init(
@@ -42,7 +36,9 @@ device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM(input_size=22962).to(device)
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset_Spectrogram(parameter=parameter)
+dataset = deepfake_dataset.Deepfake_ECG_Dataset(
+    parameter=parameter, output_type=deepfake_dataset.DEFAULT_SPECTROGRAM_OUTPUT_TYPE
+)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
