@@ -1,5 +1,7 @@
 import torch
 import pandas
+from scipy.signal import spectrogram
+import numpy as np
 
 import socket
 
@@ -22,7 +24,7 @@ PR_PARAMETER = "pr"
 QT_PARAMETER = "qt"
 
 
-class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
+class Deepfake_ECG_Dataset_Spectrogram(torch.utils.data.Dataset):
     """
     Deepfake ECG dataset filtered to only include normal ECGs
     Contains 121977 ECGs
@@ -31,7 +33,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, parameter=None):
-        super(Deepfake_ECG_Dataset, self).__init__()
+        super(Deepfake_ECG_Dataset_Spectrogram, self).__init__()
 
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
@@ -88,9 +90,9 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = torch.tensor(allData, dtype=torch.float32)
             ecg_signals = ecg_signals.reshape(-1)
 
-            # Transposing the ECG signals
-            ecg_signals = ecg_signals / 3500  # normalization
-            ecg_signals = ecg_signals.t()
+            _, _, Sxx = spectrogram(ecg_signals, 500)
+            # Sxx = 10 * np.log10(Sxx)
+            ecg_signals = Sxx.reshape(-1)
 
             # Store the loaded ASC file in the dictionary
             self.loaded_asc_files[filename] = ecg_signals
@@ -106,3 +108,29 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         # limit to 1000 on local computers
         return 1000
+
+
+if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+
+    ## Create an instance of the dataset with the 'hr' parameter
+    ecg_dataset = Deepfake_ECG_Dataset_Spectrogram(parameter="hr")
+
+    ## Create a data loader for the dataset
+    batch_size = 1
+    data_loader = DataLoader(
+        ecg_dataset, batch_size=batch_size, shuffle=True, num_workers=4
+    )
+
+    ## Iterate over a few batches and print the shapes of X and y
+    for batch_idx, (X, y) in enumerate(data_loader):
+        print(f"Batch {batch_idx + 1}:")
+        print(f"X shape: {X.shape}")
+        print(f"y shape: {y.shape}")
+        print("\n")
+
+        ## Perform any additional testing or analysis here
+
+        ## Break the loop after a few batches for demonstration purposes
+        if batch_idx == 2:
+            break
