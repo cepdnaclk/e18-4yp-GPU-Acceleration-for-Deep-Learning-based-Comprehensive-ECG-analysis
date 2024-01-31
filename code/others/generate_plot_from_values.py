@@ -1,5 +1,5 @@
 # Vision transformers need the input to be an image.
-# So we have to convert the raw ecg data into images and use those RGB values of the images as input to the vision transformer.
+# So we have to convert the raw ecg data into images and use those RGB  values of the images as input to the vision transformer.
 
 import numpy as np
 import matplotlib.pyplot as plt
