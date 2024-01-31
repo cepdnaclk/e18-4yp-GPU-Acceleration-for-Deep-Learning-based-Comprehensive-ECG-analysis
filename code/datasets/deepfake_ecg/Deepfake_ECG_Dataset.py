@@ -142,6 +142,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # close the figure. Otherwise higher CPU RAM usage
         plt.close(fig)
 
+        return ecg_signals
+
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
 
