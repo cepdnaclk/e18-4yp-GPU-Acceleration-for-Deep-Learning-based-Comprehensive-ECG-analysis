@@ -86,6 +86,62 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         return ecg_signals
 
+    def convert_to_DEFAULT_OUTPUT_TYPE(self, ecg_signals):
+        ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
+        ecg_signals = ecg_signals / 3500  # normalization
+        # Transposing the ECG signals
+        ecg_signals = ecg_signals.t()
+        return ecg_signals
+
+    def convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(self, ecg_signals):
+        ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
+        _, _, Sxx = spectrogram(ecg_signals, 500)
+
+        # change 0 values to 1 to avoid log(0) error
+        Sxx[Sxx == 0] = 0.01
+
+        Sxx = 10 * np.log10(Sxx)
+        ecg_signals = Sxx.reshape(-1)
+        return ecg_signals
+
+    def convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(self, ecg_signals):
+        # for now only use the first lead
+        # TODO: use all leads
+
+        # Set the desired width and height in pixels (required by vision transformer)
+        width_pixels = 224
+        height_pixels = 224
+
+        # Calculate DPI based on the desired size
+        dpi = 100
+
+        # Calculate the figure size in inches
+        fig_width = width_pixels / dpi
+        fig_height = height_pixels / dpi
+
+        # Create a plot with specified size
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+        ax.plot(ecg_signals[0])
+
+        # Save the plot as a variable
+        canvas = FigureCanvas(fig)
+        canvas.draw()
+        rgba_array = np.array(canvas.renderer.buffer_rgba())
+
+        # Extract RGB values (discard alpha channel)
+        # by default we have 4 channels. but we dont need the 4th one
+        rgb_array = rgba_array[:, :, :3]
+
+        ecg_signals = torch.tensor(rgb_array)
+        # convert to float32 as requested by vision transformer
+        ecg_signals = ecg_signals.to(torch.float32)
+
+        # the tensor is in shape (224, 224, 3) but we need it in shape (3, 224, 224)
+        ecg_signals = np.transpose(ecg_signals, (2, 1, 0))
+
+        # close the figure. Otherwise higher CPU RAM usage
+        plt.close(fig)
+
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
 
@@ -101,56 +157,15 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             )
 
             if self.output_type == DEFAULT_OUTPUT_TYPE:
-                ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
-                ecg_signals = ecg_signals / 3500  # normalization
-                # Transposing the ECG signals
-                ecg_signals = ecg_signals.t()
+                ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
             elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
-                ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
-                _, _, Sxx = spectrogram(ecg_signals, 500)
-
-                # change 0 values to 1 to avoid log(0) error
-                Sxx[Sxx == 0] = 0.01
-
-                Sxx = 10 * np.log10(Sxx)
-                ecg_signals = Sxx.reshape(-1)
+                ecg_signals = self.convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(
+                    ecg_signals
+                )
             elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
-                # for now only use the first lead
-                # TODO: use all leads
-
-                # Set the desired width and height in pixels (required by vision transformer)
-                width_pixels = 224
-                height_pixels = 224
-
-                # Calculate DPI based on the desired size
-                dpi = 100
-
-                # Calculate the figure size in inches
-                fig_width = width_pixels / dpi
-                fig_height = height_pixels / dpi
-
-                # Create a plot with specified size
-                fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-                ax.plot(ecg_signals[0])
-
-                # Save the plot as a variable
-                canvas = FigureCanvas(fig)
-                canvas.draw()
-                rgba_array = np.array(canvas.renderer.buffer_rgba())
-
-                # Extract RGB values (discard alpha channel)
-                # by default we have 4 channels. but we dont need the 4th one
-                rgb_array = rgba_array[:, :, :3]
-
-                ecg_signals = torch.tensor(rgb_array)
-                # convert to float32 as requested by vision transformer
-                ecg_signals = ecg_signals.to(torch.float32)
-
-                # the tensor is in shape (224, 224, 3) but we need it in shape (3, 224, 224)
-                ecg_signals = np.transpose(ecg_signals, (2, 1, 0))
-
-                # close the figure. Otherwise higher CPU RAM usage
-                plt.close(fig)
+                ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(
+                    ecg_signals
+                )
 
             # Store the loaded ASC file in the dictionary
             self.loaded_asc_files[filename] = ecg_signals
