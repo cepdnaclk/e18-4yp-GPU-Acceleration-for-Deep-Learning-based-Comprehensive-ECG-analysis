@@ -1,4 +1,5 @@
 import socket
+import platform
 
 
 def get_current_hostname():
@@ -13,3 +14,6 @@ def is_running_in_server():
         return True
     else:
         return False
+    
+def is_running_linux():
+    return platform.system() == "Linux"
