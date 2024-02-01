@@ -6,6 +6,12 @@ import mlflow
 import mlflow.pytorch
 import datetime
 
+
+import time
+
+# Record the start time
+start_time = time.time()
+
 # TODO: Replace mlflow with wandb
 
 from models.SimpleNeuralNetwork import SimpleNeuralNetwork
@@ -122,3 +128,10 @@ print("Finished Training")
 import os
 
 os.system("cp -r mlruns ~/4yp/")
+
+# Record the end time
+end_time = time.time()
+
+# Calculate and print the runtime
+runtime = end_time - start_time
+print(f"Runtime: {runtime} seconds")
