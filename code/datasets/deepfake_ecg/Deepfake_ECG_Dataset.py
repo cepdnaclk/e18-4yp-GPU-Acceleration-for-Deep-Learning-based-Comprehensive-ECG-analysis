@@ -167,7 +167,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             #     sep=" ",
             # )
 
-             ecg_signals = pandas.read_csv(
+            ecg_signals = pandas.read_csv(
                 f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
                 header=None,
                 sep=" ",
@@ -197,4 +197,5 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             return self.ground_truths.shape[0]
 
         # limit to 1000 on local computers
-        return 1000
+        # return 1000
+        return 999

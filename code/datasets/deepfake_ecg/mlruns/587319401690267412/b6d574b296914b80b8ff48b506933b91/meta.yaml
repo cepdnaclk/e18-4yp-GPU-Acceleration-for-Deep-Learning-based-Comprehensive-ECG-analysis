@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/mlruns/587319401690267412/b6d574b296914b80b8ff48b506933b91/artifacts
+end_time: 1706777140579
+entry_point_name: ''
+experiment_id: '587319401690267412'
+lifecycle_stage: active
+run_id: b6d574b296914b80b8ff48b506933b91
+run_name: amazing-horse-739
+run_uuid: b6d574b296914b80b8ff48b506933b91
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706777108805
+status: 4
+tags: []
+user_id: nipun
