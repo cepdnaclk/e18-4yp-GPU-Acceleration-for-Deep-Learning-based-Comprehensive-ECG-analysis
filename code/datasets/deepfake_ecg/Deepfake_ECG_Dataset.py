@@ -44,10 +44,16 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
+        
+        # NOTE : Uncomment below lines and comment out the next few lines
 
         # load the ground truth labels
+        # self.ground_truths = pandas.read_csv(
+        #     "datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
+        # )
+
         self.ground_truths = pandas.read_csv(
-            "datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
+            "D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
         )
 
         if parameter == HR_PARAMETER:
@@ -152,12 +158,21 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = self.loaded_asc_files[filename]
         else:
             # Load the ASC file
-            ecg_signals = pandas.read_csv(
-                f"datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
+             
+            # NOTE : Uncomment below lines and comment out the next few lines
+
+            # ecg_signals = pandas.read_csv(
+            #     f"datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
+            #     header=None,
+            #     sep=" ",
+            # )
+
+             ecg_signals = pandas.read_csv(
+                f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
                 header=None,
                 sep=" ",
             )
-
+             
             if self.output_type == DEFAULT_OUTPUT_TYPE:
                 ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
             elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:

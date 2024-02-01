@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/mlruns/587319401690267412/9f3c68b209ab49d5aa34857da26a14ee/artifacts
+end_time: 1706776563917
+entry_point_name: ''
+experiment_id: '587319401690267412'
+lifecycle_stage: active
+run_id: 9f3c68b209ab49d5aa34857da26a14ee
+run_name: unequaled-trout-403
+run_uuid: 9f3c68b209ab49d5aa34857da26a14ee
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706776563701
+status: 4
+tags: []
+user_id: nipun
