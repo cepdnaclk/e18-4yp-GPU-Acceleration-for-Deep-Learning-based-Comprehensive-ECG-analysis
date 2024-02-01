@@ -5,6 +5,7 @@ import datetime
 import wandb
 import os
 import utils.current_server as current_server
+import utils.gpu as gpu
 
 
 import torchvision.models.vision_transformer as vision_transformer
@@ -33,28 +34,7 @@ wandb.init(
 )
 
 
-def get_device_with_lowest_vram():
-    if torch.cuda.is_available():
-        available_gpus = torch.cuda.device_count()
-
-        if available_gpus > 0:
-            # Get GPU memory usage for each available GPU
-            gpu_memory_usage = [
-                torch.cuda.memory_allocated(device) for device in range(available_gpus)
-            ]
-
-            # Find the GPU with the lowest memory usage
-            chosen_gpu = torch.device(
-                f"cuda:{min(range(available_gpus), key=lambda i: gpu_memory_usage[i])}"
-            )
-            print(f"Choosing GPU {chosen_gpu} with lowest memory usage")
-            return chosen_gpu
-
-    # Use CPU if no GPU is available or if the GPU count is 0
-    return torch.device("cpu")
-
-
-device = get_device_with_lowest_vram()
+device = gpu.get_device_with_lowest_vram()
 
 # Create the model
 # for more information on how to use the class. Read the source code
