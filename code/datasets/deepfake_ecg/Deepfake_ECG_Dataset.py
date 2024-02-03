@@ -234,7 +234,7 @@ if __name__ == "__main__":
         ecg_image = tensor_to_image(data_tensor)
 
         # Save the image to disk
-        ecg_image.save("ecg_image_test_for_ViT.png", "PNG")
+        ecg_image.save("./datasets/deepfake_ecg/ecg_image_test_for_ViT.png", "PNG")
         print("Image saved successfully.")
         
     #TODO : more tests can be added to test spectrogram and ...
