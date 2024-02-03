@@ -29,6 +29,7 @@ QT_PARAMETER = "qt"
 DEFAULT_OUTPUT_TYPE = "default"
 DEFAULT_SPECTROGRAM_OUTPUT_TYPE = "spectrogram"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE = "vision_transformer_image"
+VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY = "vision_transformer_image_grey" 
 
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
@@ -147,13 +148,18 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # the tensor is in shape (224, 224, 3) but we need it in shape (3, 224, 224)
         ecg_signals = np.transpose(ecg_signals, (2, 1, 0))
         
-        # by doing this, it will has 3 channels eventhough they are greyscale
-        # can be set to 1 channel but that will not work with the ViT input
-        # have to look more in to ViT input, if we need to send just one channel
-        ecg_signals_gray = F.rgb_to_grayscale(ecg_signals, num_output_channels=3) 
         # close the figure. Otherwise higher CPU RAM usage
         plt.close(fig)
 
+        return ecg_signals
+    
+    def convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(self, ecg_signals):
+        ecg_signals_RGB = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(ecg_signals)
+    
+        # by doing this, it will has 3 channels eventhough they are greyscale
+        # can be set to 1 channel but that will not work with the ViT input
+        # have to look more in to ViT input, if we need to send just one channel
+        ecg_signals_gray = F.rgb_to_grayscale(ecg_signals_RGB, num_output_channels=3) 
         return ecg_signals_gray
 
     def __getitem__(self, index):
@@ -187,6 +193,10 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 )
             elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
                 ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(
+                    ecg_signals
+                )
+            elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY:
+                ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(
                     ecg_signals
                 )
 
@@ -228,7 +238,7 @@ if __name__ == "__main__":
 
         dataset = Deepfake_ECG_Dataset(
             parameter=HR_PARAMETER,
-            output_type=VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE,
+            output_type=VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY,
         )
         print("Dataset loaded as images for Vison Transformers, getting the first item")
 
@@ -239,7 +249,7 @@ if __name__ == "__main__":
         ecg_image = tensor_to_image(data_tensor)
 
         # Save the image to disk
-        ecg_image.save("./datasets/deepfake_ecg/ecg_image_test_for_ViT.png", "PNG")
+        ecg_image.save("./datasets/deepfake_ecg/ecg_image_test_for_ViT_grey.png", "PNG")
         print("Image saved successfully.")
         
     #TODO : more tests can be added to test spectrogram and ...
