@@ -200,3 +200,48 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # limit to 1000 on local computers
         # return 1000
         return 999
+    
+    
+if __name__ == "__main__":
+    from PIL import Image
+
+    def tensor_to_image(tensor):
+        # Assuming tensor is in shape (3, 224, 224) and in torch.float32 format
+        
+        # First, convert it to numpy and transpose it back to (224, 224, 3)
+        # Make sure to clip values to the range [0, 255] and convert to uint8
+        np_image = tensor.cpu().detach().numpy().transpose(1, 2, 0)
+        np_image = np.clip(np_image, 0, 255).astype(np.uint8)
+        
+        # Now, convert numpy array to PIL Image
+        image = Image.fromarray(np_image)
+        
+        return image
+    
+    def test_dataset_loading_and_processing_as_images_for_ViT():
+        print("Main started, starting to get dataset as images for Vision Transformers")
+
+        dataset = Deepfake_ECG_Dataset(
+            parameter=HR_PARAMETER,
+            output_type=VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE,
+        )
+        print("Dataset loaded as images for Vison Transformers, getting the first item")
+
+        first_item = dataset[0]
+        data_tensor, second_tensor = first_item
+
+        # Convert the tensor back to an image
+        ecg_image = tensor_to_image(data_tensor)
+
+        # Save the image to disk
+        ecg_image.save("ecg_image_test_for_ViT.png", "PNG")
+        print("Image saved successfully.")
+        
+    #TODO : more tests can be added to test spectrogram and ...
+    test_dataset_loading_and_processing_as_images_for_ViT()
+        
+
+
+    
+    
+    
