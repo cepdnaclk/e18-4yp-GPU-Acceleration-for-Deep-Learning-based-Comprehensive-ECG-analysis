@@ -4,6 +4,7 @@ from scipy.signal import spectrogram
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import torchvision.transforms.functional as F
 
 import socket
 
@@ -145,11 +146,15 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         # the tensor is in shape (224, 224, 3) but we need it in shape (3, 224, 224)
         ecg_signals = np.transpose(ecg_signals, (2, 1, 0))
-
+        
+        # by doing this, it will has 3 channels eventhough they are greyscale
+        # can be set to 1 channel but that will not work with the ViT input
+        # have to look more in to ViT input, if we need to send just one channel
+        ecg_signals_gray = F.rgb_to_grayscale(ecg_signals, num_output_channels=3) 
         # close the figure. Otherwise higher CPU RAM usage
         plt.close(fig)
 
-        return ecg_signals
+        return ecg_signals_gray
 
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
