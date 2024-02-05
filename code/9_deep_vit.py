@@ -36,7 +36,17 @@ wandb.init(
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
-model = DeepViT(input_size=40000).to(device)
+model = DeepViT(
+    image_size = 256,
+    patch_size = 32,
+    num_classes = 1,
+    dim = 1024,
+    depth = 6,
+    heads = 16,
+    mlp_dim = 2048,
+    dropout = 0.1,
+    emb_dropout = 0.1
+).to(device)
 
 # Create the dataset class
 dataset = Deepfake_ECG_Dataset(parameter=parameter)
@@ -75,7 +85,7 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
-        outputs = model(inputs, mask)
+        outputs = model(inputs)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
