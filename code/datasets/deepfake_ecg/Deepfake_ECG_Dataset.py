@@ -30,6 +30,7 @@ DEFAULT_OUTPUT_TYPE = "default"
 DEFAULT_SPECTROGRAM_OUTPUT_TYPE = "spectrogram"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE = "vision_transformer_image"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY = "vision_transformer_image_grey" 
+DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE = "deep_vit_grey_256_image"
 
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
@@ -156,11 +157,20 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     def convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(self, ecg_signals):
         ecg_signals_RGB = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(ecg_signals)
     
+        
+        
         # by doing this, it will has 3 channels eventhough they are greyscale
         # can be set to 1 channel but that will not work with the ViT input
         # have to look more in to ViT input, if we need to send just one channel
+
+        # NOTE : In ViT channels can be set to 1 for Grayscale images !
         ecg_signals_gray = F.rgb_to_grayscale(ecg_signals_RGB, num_output_channels=3) 
         return ecg_signals_gray
+    
+
+    def convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(self,ecg_signals):
+        
+
 
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
@@ -197,6 +207,10 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 )
             elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY:
                 ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(
+                    ecg_signals
+                )
+            elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
+                ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(
                     ecg_signals
                 )
 
