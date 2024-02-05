@@ -115,6 +115,7 @@ for epoch in range(num_epochs):
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 model_path = f"saved_models/{current_time}"
+# model_path = f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/saved_models/{current_time}"
 torch.save(model, model_path)
 
 print("Finished Training")
