@@ -169,7 +169,60 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     
 
     def convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(self,ecg_signals):
-        
+        data = ecg_signals[:, 0]  # Selecting the first lead
+        ecg_data = data[300:-200]
+
+        # Reshape the data into a 3x3 grid
+        num_rows = 3
+        num_cols = 3
+        grid_data = ecg_data.reshape(num_rows, num_cols, -1)
+
+        # Create a figure with subplots
+        fig, axs = plt.subplots(num_rows, num_cols, figsize=(9, 9))
+        fig.subplots_adjust(hspace=0, wspace=0)
+
+        # Plot each waveform in grayscale
+        for i in range(num_rows):
+            for j in range(num_cols):
+                axs[i, j].plot(grid_data[i, j], color='black')
+                axs[i, j].axis('off')  # Remove axes
+                axs[i, j].set_xticks([])
+                axs[i, j].set_yticks([])
+
+        # Convert the plot to a grayscale image
+        fig.canvas.draw()
+        gray_image = Image.frombytes('L', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+
+        # Close the plot to prevent it from being displayed
+        plt.close()
+
+        # Resize to 256x256
+        resized_image = gray_image.resize((256, 256))
+
+        # Convert the resized image to a NumPy array
+        image_matrix = np.array(resized_image)
+
+        # Print the matrix values
+        # print("256x256 Grayscale Image Matrix:")
+        # print(image_matrix)
+
+        # Load the grayscale image directly
+        image_array = np.array(resized_image)
+
+        # Print the pixel values
+        # print(image_array)
+
+
+
+        # Convert to numpy array and normalize
+        image_array = np.array(image_array).reshape(1, 1, 256, 256)
+        normalized_array = image_array / 255.0  # Normalize pixel values between 0 and 1
+
+        # Convert to PyTorch tensor
+        torch_array = torch.from_numpy(normalized_array)
+
+        return torch_array
+
 
 
     def __getitem__(self, index):

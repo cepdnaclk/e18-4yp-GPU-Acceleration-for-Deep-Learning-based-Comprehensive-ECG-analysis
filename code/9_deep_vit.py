@@ -7,6 +7,8 @@ import os
 
 from models.DeepViT import DeepViT
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
+import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_ecg_dataset
+
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
@@ -27,7 +29,7 @@ wandb.init(
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
-        "dataset": "Deepfake_ECG_Dataset",
+        "dataset": "Deepfake_ECG_Dataset DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE",
         "epochs": num_epochs,
         "parameter": parameter,
     },
@@ -49,7 +51,11 @@ model = DeepViT(
 ).to(device)
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset(parameter=parameter)
+# Create the dataset class
+dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
+    parameter=parameter,
+    output_type=deepfake_ecg_dataset.DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE,
+)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
