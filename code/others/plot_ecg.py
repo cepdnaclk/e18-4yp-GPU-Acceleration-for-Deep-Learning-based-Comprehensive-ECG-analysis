@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # Strip the first 300 and last 200 rows
 # Load the data from the file
-file_path = "/content/drive/MyDrive/0.asc"
+file_path = "../datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/0.asc"
 
 data = np.loadtxt(file_path)
 ecg_data = data[300:-200]
@@ -35,8 +35,32 @@ print(gray_grid_data)
 print("Shape : ", gray_grid_data.shape)
 
 # Save the resulting image
-plt.savefig('ecg_grid.png', dpi=256, bbox_inches='tight')
+plt.savefig('../screenshots/ecg_grid.png', dpi=256, bbox_inches='tight')
 plt.show()
 plt.close()
 
-print("ECG waveform grid saved as 'ecg_grid.png'")
+print("ECG waveform grid saved as '../screenshots/ecg_grid.png'")
+
+
+
+
+
+
+from PIL import Image
+
+# Open the RGBA image
+image_path = '../screenshots/ecg_grid.png'
+rgba_image = Image.open(image_path)
+
+# Convert RGBA to grayscale
+gray_image = rgba_image.convert('L')
+
+# Resize to 256x256
+resized_image = gray_image.resize((256, 256))
+
+# Save the resulting grayscale image
+output_path = '../screenshots/ecg_grid_gray_256.png'
+resized_image.save(output_path)
+
+print(f"Grayscale image saved at: {output_path}")
+
