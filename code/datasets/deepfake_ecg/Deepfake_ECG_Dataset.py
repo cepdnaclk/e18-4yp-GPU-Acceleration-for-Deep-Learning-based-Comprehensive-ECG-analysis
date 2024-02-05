@@ -8,6 +8,10 @@ import torchvision.transforms.functional as F
 
 import socket
 
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+
 # decide to run the full dataset or no based on the server or local machine
 hostname = socket.gethostname()
 
@@ -169,12 +173,13 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     
 
     def convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(self,ecg_signals):
-        data = ecg_signals[:, 0]  # Selecting the first lead
+        data = ecg_signals[0]  # Selecting the first lead
         ecg_data = data[300:-200]
 
         # Reshape the data into a 3x3 grid
         num_rows = 3
         num_cols = 3
+        ecg_data = ecg_data.values  # Convert to NumPy array
         grid_data = ecg_data.reshape(num_rows, num_cols, -1)
 
         # Create a figure with subplots
