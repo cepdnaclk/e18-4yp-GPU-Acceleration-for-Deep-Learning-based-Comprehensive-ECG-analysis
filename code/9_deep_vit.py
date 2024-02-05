@@ -112,7 +112,7 @@ for epoch in range(num_epochs):
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
             mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
-            outputs = model(inputs, mask)
+            outputs = model(inputs)
             # if i == 0:
             #     for x in range(len(outputs)):
             #         print(f"Predicted: {outputs[x]} Real: {labels[x]}")
