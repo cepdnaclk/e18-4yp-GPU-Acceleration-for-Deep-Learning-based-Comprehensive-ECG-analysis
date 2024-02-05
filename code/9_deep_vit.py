@@ -15,8 +15,8 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 
 # Hyperparameters
-batch_size = 32
-learning_rate = 0.01
+batch_size = 1
+learning_rate = 0.02
 num_epochs = 200
 train_fraction = 0.8
 parameter = HR_PARAMETER
@@ -44,7 +44,7 @@ model = DeepViT(
     num_classes = 1,
     dim = 1024,
     depth = 6,
-    heads = 16,
+    heads = 9, # 16
     mlp_dim = 2048,
     dropout = 0.1,
     emb_dropout = 0.1
@@ -56,6 +56,8 @@ dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
     parameter=parameter,
     output_type=deepfake_ecg_dataset.DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE,
 )
+
+# print(dataset)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
@@ -91,7 +93,7 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
-        outputs = model(inputs)
+        outputs = model(inputs.float())
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()

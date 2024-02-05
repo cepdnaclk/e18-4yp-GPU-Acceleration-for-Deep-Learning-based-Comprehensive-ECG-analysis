@@ -173,14 +173,19 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     
 
     def convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(self,ecg_signals):
+
+        
         data = ecg_signals[0]  # Selecting the first lead
         ecg_data = data[300:-200]
+        # print("#########################################################")
+        
 
         # Reshape the data into a 3x3 grid
         num_rows = 3
         num_cols = 3
         ecg_data = ecg_data.values  # Convert to NumPy array
         grid_data = ecg_data.reshape(num_rows, num_cols, -1)
+        
 
         # Create a figure with subplots
         fig, axs = plt.subplots(num_rows, num_cols, figsize=(9, 9))
@@ -225,6 +230,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         # Convert to PyTorch tensor
         torch_array = torch.from_numpy(normalized_array)
+
+        # print('torch_array.shape = ',torch_array.shape)
 
         return torch_array
 

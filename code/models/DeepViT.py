@@ -116,6 +116,8 @@ class DeepViT(nn.Module):
         )
 
     def forward(self, img):
+        img = img.reshape([1, 1, 256, 256])
+        # print("img.shape = ", img.shape)
         x = self.to_patch_embedding(img)
         b, n, _ = x.shape
 
