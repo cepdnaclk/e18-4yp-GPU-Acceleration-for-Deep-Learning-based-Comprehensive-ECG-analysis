@@ -18,7 +18,8 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 batch_size = 1
 learning_rate = 0.02
 num_epochs = 200
-train_fraction = 0.8
+train_fraction = 0.08
+validation_fraction = 0.02
 parameter = HR_PARAMETER
 
 # start a new wandb run to track this script
@@ -61,7 +62,7 @@ dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
-test_size = len(dataset) - train_size
+test_size = int(validation_fraction * len(dataset))
 train_dataset, val_dataset = torch.utils.data.random_split(
     dataset, [train_size, test_size]
 )
