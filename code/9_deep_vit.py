@@ -18,8 +18,8 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 batch_size = 1
 learning_rate = 0.02
 num_epochs = 200
-train_fraction = 0.08
-validation_fraction = 0.02
+train_fraction = 0.8
+validation_fraction = 0.2
 parameter = HR_PARAMETER
 
 # start a new wandb run to track this script
@@ -36,7 +36,8 @@ wandb.init(
     },
 )
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+print(device)
 
 # Create the model
 model = DeepViT(
@@ -58,11 +59,13 @@ dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
     output_type=deepfake_ecg_dataset.DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE,
 )
 
+print("About dataset : ", type(dataset))
+
 # print(dataset)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
-test_size = int(validation_fraction * len(dataset))
+test_size = len(dataset) - train_size
 train_dataset, val_dataset = torch.utils.data.random_split(
     dataset, [train_size, test_size]
 )
