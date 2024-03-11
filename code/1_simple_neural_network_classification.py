@@ -1,9 +1,13 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+import wandb
+import os
+import utils.current_server as current_server
 
 
 import time
+
 
 # Record the start time
 start_time = time.time()
@@ -13,10 +17,24 @@ from models.SimpleNeuralNetworkClassification import SimpleNeuralNetworkClassifi
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
 
 # Hyperparameters
-batch_size = 2
+batch_size = 1
 learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
+
+# start a new wandb run to track this script
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="initial-testing",
+    # track hyperparameters and run metadata
+    config={
+        "learning_rate": learning_rate,
+        "architecture": os.path.basename(__file__),
+        "dataset": "PTB-XL",
+        "epochs": num_epochs,
+        "parameter": "classification",
+    },
+)
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -32,9 +50,17 @@ train_size = int(train_fraction * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 
+# set num_workers
+if current_server.is_running_in_server():
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
+    num_workers = 4
+else:
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
+    num_workers = 0
+
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -66,9 +92,9 @@ for epoch in range(num_epochs):
         total_samples += labels.size(0)
 
     # Compute accuracy
-    accuracy = total_correct / total_samples
+    train_accuracy = total_correct / total_samples
     # Log metrics
-    print(f"Epoch: {epoch} train_accuracy: {accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
 
     # Validation loop
     model.eval()
@@ -92,9 +118,17 @@ for epoch in range(num_epochs):
             total_samples += labels.size(0)
 
     # Compute accuracy
-    accuracy = total_correct / total_samples
+    val_accuracy = total_correct / total_samples
     # Log metrics
-    print(f"Epoch: {epoch} val_accuracy: {accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+    print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+
+    #  Log metrics
+    wandb.log(
+        {
+            "train_accuracy": train_accuracy,
+            "val_accuracy": val_accuracy,
+        }
+    )
 
     # # Save the trained model with date and time in the path
     # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

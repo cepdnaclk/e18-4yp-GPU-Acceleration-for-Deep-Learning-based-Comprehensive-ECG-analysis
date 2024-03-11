@@ -29,13 +29,15 @@ class ECGDataset(Dataset):
         # Apply diagnostic superclass and add the 'diagnostic_superclass' column
 
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
+        self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) > 0)]
 
     def __len__(self):
+        # return 10
         return len(self.Y)
 
     def __getitem__(self, idx):
         x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
-        y = self.Y["diagnostic_superclass"].iloc[idx]
+        y = self.Y["diagnostic_superclass"].iloc[idx][0]
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
 
