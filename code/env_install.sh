@@ -7,6 +7,7 @@ pip3 install matplotlib==3.8.2
 pip3 install tqdm==4.66.1
 pip install wfdb==4.1.2
 pip install wandb==0.16.1
+pip install einops==0.7.0
 
 # after that 
 # 'wandb login' 
