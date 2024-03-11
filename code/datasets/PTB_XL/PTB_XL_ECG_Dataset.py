@@ -7,36 +7,36 @@ import numpy as np
 
 # This will not be used as the labels are not there.
 
+
 class ECGDataset(Dataset):
-    def __init__(self, path='./', sampling_rate=100):
+    labels = ["MI", "STTC", "HYP", "NORM", "CD"]
+
+    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500):
         self.path = path
         self.sampling_rate = sampling_rate
 
         # Load and convert annotation data
-        self.Y = pd.read_csv(path + 'ptbxl_database.csv', index_col='ecg_id')
+        self.Y = pd.read_csv(path + "ptbxl_database.csv", index_col="ecg_id")
         self.Y.scp_codes = self.Y.scp_codes.apply(lambda x: ast.literal_eval(x))
 
         # Load raw signal data
         self.X = self.load_raw_data()
 
         # Load scp_statements.csv for diagnostic aggregation
-        self.agg_df = pd.read_csv(path + 'scp_statements.csv', index_col=0)
+        self.agg_df = pd.read_csv(path + "scp_statements.csv", index_col=0)
         self.agg_df = self.agg_df[self.agg_df.diagnostic == 1]
-        
-        # Apply diagnostic superclass and add the 'diagnostic_superclass' column
-        
-        self.Y['diagnostic_superclass'] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
 
+        # Apply diagnostic superclass and add the 'diagnostic_superclass' column
+
+        self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
 
     def __len__(self):
         return len(self.Y)
 
     def __getitem__(self, idx):
         x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
-        diagnostic_superclass = self.Y['diagnostic_superclass'].iloc[idx]
-        y = torch.tensor([1 if label in diagnostic_superclass else 0 for label in ["NORM"]], dtype=torch.float32)
-        # y = torch.tensor(self.Y['diagnostic_superclass'].iloc[idx], dtype=torch.long) # this is a text as NORM... (normal or not)
-
+        y = self.Y["diagnostic_superclass"].iloc[idx]
+        y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
 
     def load_raw_data(self):
@@ -45,7 +45,7 @@ class ECGDataset(Dataset):
         else:
             data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in self.Y.filename_hr]
 
-        data = np.array([signal for signal, _ in data]) # here _ is metadata : leftout
+        data = np.array([signal for signal, _ in data])  # here _ is metadata : leftout
         return data
 
     def aggregate_diagnostic(self, y_dic):
@@ -56,7 +56,7 @@ class ECGDataset(Dataset):
         return list(set(tmp))
 
 
-# Example usage: if the path is different and the sampling rate different 
+# Example usage: if the path is different and the sampling rate different
 # default set to current directory and sampleRate 100
 # path = './'
 # sampling_rate = 100
