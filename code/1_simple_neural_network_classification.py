@@ -1,0 +1,112 @@
+import torch
+import torch.nn as nn
+from tqdm import tqdm
+
+
+import time
+
+# Record the start time
+start_time = time.time()
+
+
+from models.SimpleNeuralNetworkClassification import SimpleNeuralNetworkClassification
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+
+# Hyperparameters
+batch_size = 2
+learning_rate = 0.001
+num_epochs = 50
+train_fraction = 0.8
+
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# Create the model
+model = SimpleNeuralNetworkClassification().to(device)
+
+# Create the dataset class
+dataset = ECGDataset()
+
+# Split the dataset into training and validation sets
+train_size = int(train_fraction * len(dataset))
+test_size = len(dataset) - train_size
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+
+# Create data loaders for training and validation
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+
+# Optimizer and loss function
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+criterion = nn.BCEWithLogitsLoss()
+
+
+for epoch in range(num_epochs):
+    model.train()
+    total_correct = 0
+    total_samples = 0
+    for i, data in tqdm(
+        enumerate(train_dataloader, 0),
+        total=len(train_dataloader),
+        desc=f"Training Epoch {epoch + 1}/{num_epochs}",
+    ):
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        # Calculate accuracy
+        predicted = torch.argmax(outputs, 1)
+        labels_max = torch.argmax(labels, 1)
+        total_correct += (predicted == labels_max).sum().item()
+        total_samples += labels.size(0)
+
+    # Compute accuracy
+    accuracy = total_correct / total_samples
+    # Log metrics
+    print(f"Epoch: {epoch} train_accuracy: {accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+
+    # Validation loop
+    model.eval()
+    total_correct = 0
+    total_samples = 0
+    with torch.no_grad():
+        for i, data in tqdm(
+            enumerate(val_dataloader, 0),
+            total=len(val_dataloader),
+            desc=f"Validating Epoch {epoch + 1}/{num_epochs}",
+        ):
+            inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device)
+
+            outputs = model(inputs)
+
+            # Calculate accuracy
+            predicted = torch.argmax(outputs, 1)
+            labels_max = torch.argmax(labels, 1)
+            total_correct += (predicted == labels_max).sum().item()
+            total_samples += labels.size(0)
+
+    # Compute accuracy
+    accuracy = total_correct / total_samples
+    # Log metrics
+    print(f"Epoch: {epoch} val_accuracy: {accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+
+    # # Save the trained model with date and time in the path
+    # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # model_path = f"saved_models/{current_time}"
+    # mlflow.pytorch.save_model(model, model_path)
+
+print("Finished Training")
+
+
+# Record the end time
+end_time = time.time()
+
+# Calculate and print the runtime
+runtime = end_time - start_time
+print(f"Runtime: {runtime} seconds")
