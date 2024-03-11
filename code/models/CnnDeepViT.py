@@ -132,3 +132,50 @@ class DeepViT(nn.Module):
 
         x = self.to_latent(x)
         return self.mlp_head(x)
+    
+
+
+# CNN before DeepVit
+
+class CnnDeepViT(nn.Module):
+    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, pool='cls', channels=1, dim_head=64, dropout=0., emb_dropout=0.):
+        super().__init__()
+
+        # Add CNN layers before DeepViT layers
+        self.cnn_layers = nn.Sequential(
+            nn.Conv2d(channels, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+
+        # DeepViT layers
+        self.deep_vit = DeepViT(
+            image_size=image_size,
+            patch_size=patch_size,
+            num_classes=num_classes,
+            dim=dim,
+            depth=depth,
+            heads=heads,
+            mlp_dim=mlp_dim,
+            pool=pool,
+            channels=128,  # Update channels based on the output channels of the last CNN layer
+            dim_head=dim_head,
+            dropout=dropout,
+            emb_dropout=emb_dropout
+        )
+
+    def forward(self, img):
+        # Apply CNN layers
+        img = self.cnn_layers(img)
+
+        # Apply DeepViT layers
+        return self.deep_vit(img)
