@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class SimpleCNNClassification(nn.Module):
     def __init__(self):
-        super(SimpleCNN, self).__init__()
+        super(SimpleCNNClassification, self).__init__()
 
         # Convolutional layers
         self.conv1 = nn.Conv1d(1, 16, kernel_size=3, stride=1, padding=1)
