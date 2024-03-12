@@ -7,7 +7,7 @@ import numpy as np
 
 # This will not be used as the labels are not there.
 
-
+# "D:\SEM_07\FYP\Data\PTBXL/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
 class ECGDataset(Dataset):
     labels = ["MI", "STTC", "HYP", "NORM", "CD"]
 
