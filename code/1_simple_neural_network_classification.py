@@ -4,6 +4,7 @@ from tqdm import tqdm
 import wandb
 import os
 import utils.current_server as current_server
+import datetime
 
 
 import time
@@ -64,7 +65,7 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-criterion = nn.BCEWithLogitsLoss()
+criterion = nn.CrossEntropyLoss()
 
 
 for epoch in range(num_epochs):
@@ -130,10 +131,10 @@ for epoch in range(num_epochs):
         }
     )
 
-    # # Save the trained model with date and time in the path
-    # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    # model_path = f"saved_models/{current_time}"
-    # mlflow.pytorch.save_model(model, model_path)
+# Save the trained model with date and time in the path
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = f"saved_models/{current_time}"
+torch.save(model, model_path)
 
 print("Finished Training")
 
