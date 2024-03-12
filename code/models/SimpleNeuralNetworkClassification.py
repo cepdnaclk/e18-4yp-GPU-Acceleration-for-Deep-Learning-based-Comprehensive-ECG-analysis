@@ -17,3 +17,5 @@ class SimpleNeuralNetworkClassification(nn.Module):
     def forward(self, x):
         x = self.all(x)
         return x
+
+
