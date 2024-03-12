@@ -21,6 +21,11 @@ class ECGDataset(Dataset):
 
         # Load raw signal data
         self.X = self.load_raw_data()
+        # standardize self.X
+        # self.X = (self.X - np.mean(self.X)) / np.std(self.X)
+
+        # normalize self.X
+        # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
 
         # Load scp_statements.csv for diagnostic aggregation
         self.agg_df = pd.read_csv(path + "scp_statements.csv", index_col=0)
