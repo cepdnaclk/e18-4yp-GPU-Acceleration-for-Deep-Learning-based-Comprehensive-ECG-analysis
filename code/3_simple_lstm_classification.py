@@ -8,12 +8,13 @@ import time
 import utils.current_server as current_server
 import numpy as np
 from sklearn.metrics import roc_auc_score
-#testddd
 # Record the start time
 start_time = time.time()
 
 from models.SimpleLSTMClassification import SimpleLSTMClassification
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+
+INPUT_CHANNEL_8 = "input_channel_8"
 
 # Hyperparameters
 batch_size = 1
@@ -33,14 +34,15 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-)
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    notes="8 channel separated",
 
+)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model
 model = SimpleLSTMClassification().to(device)
 
 # Create the dataset class
-dataset = ECGDataset()
+dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
 
 
 # Split the dataset into training and validation sets

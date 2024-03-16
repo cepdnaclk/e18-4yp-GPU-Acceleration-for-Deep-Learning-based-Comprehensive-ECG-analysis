@@ -8,12 +8,17 @@ import numpy as np
 # This will not be used as the labels are not there.
 
 # "D:\SEM_07\FYP\Data\PTBXL/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
+
+DEFAULT = "default"
+INPUT_CHANNEL_8 = "input_channel_8"
+
 class ECGDataset(Dataset):
     labels = ["MI", "STTC", "HYP", "NORM", "CD"]
 
-    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500):
+    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500,no_of_input_channels=DEFAULT):
         self.path = path
         self.sampling_rate = sampling_rate
+        self.no_of_input_channels = no_of_input_channels
 
         # Load and convert annotation data
         self.Y = pd.read_csv(path + "ptbxl_database.csv", index_col="ecg_id")
@@ -37,11 +42,14 @@ class ECGDataset(Dataset):
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) > 0)]
 
     def __len__(self):
-        # return 10
+        #  return 1000
         return len(self.Y)
 
     def __getitem__(self, idx):
-        x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
+        if(self.no_of_input_channels==DEFAULT):
+                    x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
+        elif(self.no_of_input_channels==INPUT_CHANNEL_8):
+            x = torch.Tensor(self.X[idx]) # sent as 5000,8
         y = self.Y["diagnostic_superclass"].iloc[idx][0]
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
@@ -70,3 +78,23 @@ class ECGDataset(Dataset):
 # ecg_dataset = ECGDataset(path, sampling_rate)
 
 # ecg_dataset = ECGDataset()
+
+#test to get the return shape of x and y
+
+if __name__ == '__main__': 
+
+    # Initialize the dataset
+    dataset_path = "./ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
+    dataset = ECGDataset(path=dataset_path)
+
+    # Retrieve a sample
+    sample_index = 0  # For example, get the first sample
+    x, y = dataset[sample_index]
+
+    # Print sizes of x and y
+    print(f"Size of x: {x.size()}")
+    print(f"Size of y: {y.size()}")
+
+    # Optionally, print x and y to see their values (might be large)
+    # print(x)
+    # print(y)
