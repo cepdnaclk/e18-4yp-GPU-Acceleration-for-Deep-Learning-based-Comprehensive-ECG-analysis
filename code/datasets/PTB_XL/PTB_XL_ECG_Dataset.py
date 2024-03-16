@@ -7,6 +7,7 @@ import numpy as np
 
 # This will not be used as the labels are not there.
 
+
 # "D:\SEM_07\FYP\Data\PTBXL/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
 
 DEFAULT = "default"
@@ -39,7 +40,7 @@ class ECGDataset(Dataset):
         # Apply diagnostic superclass and add the 'diagnostic_superclass' column
 
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
-        self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) > 0)]
+        self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
     def __len__(self):
         #  return 1000
