@@ -4,6 +4,7 @@ from tqdm import tqdm
 import datetime
 import wandb
 import os
+import utils.current_server as current_server
 
 from models.SimpleLSTM import SimpleLSTM
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
@@ -15,9 +16,12 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 1000
+num_epochs = 25 # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
-parameter = HR_PARAMETER
+parameter = QT_PARAMETER
+
+best_model = None
+best_validation_loss = 1000000
 
 # start a new wandb run to track this script
 wandb.init(
@@ -31,9 +35,10 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": parameter,
     },
+    notes="LSTM : regression : QT take 1 : save the best model",
 )
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = SimpleLSTM().to(device)
@@ -48,13 +53,17 @@ train_dataset, val_dataset = torch.utils.data.random_split(
     dataset, [train_size, test_size]
 )
 
+# set num_workers
+if current_server.is_running_in_server():
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
+    num_workers = 4
+else:
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
+    num_workers = 0
+
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True, num_workers=0
-)
-val_dataloader = torch.utils.data.DataLoader(
-    val_dataset, batch_size=batch_size, shuffle=False, num_workers=0
-)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -111,17 +120,23 @@ for epoch in range(num_epochs):
 
     print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
     print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
+    
+    if((val_loss / len(val_dataloader))<best_validation_loss):
+        best_validation_loss = val_loss
+        best_model = model
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-torch.save(model, model_path)
+model_name = "LSTM_QT"  # Your specific model name prefix
+model_path = f"saved_models/{model_name}{current_time}"
 
+torch.save(best_model, model_path)
+print("Best Model Saved")
 print("Finished Training")
 wandb.finish()
 
 # create a backup of mlruns in babbage server
 # "Turing is not stable, data could be lost" - Akila E17
-import os
+# import os
 
-os.system("cp -r mlruns ~/4yp/")
+# os.system("cp -r mlruns ~/4yp/")
