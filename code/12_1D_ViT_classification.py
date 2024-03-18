@@ -6,6 +6,7 @@ import os
 import utils.current_server as current_server
 from sklearn.metrics import roc_auc_score
 import numpy as np
+import torch.optim.lr_scheduler as lr_scheduler
 
 import datetime
 
@@ -17,11 +18,11 @@ import time
 start_time = time.time()
 
 
-from models.OneD_ViT import VisionTransformerOpus
+from models.OneD_ViT import VisionTransformerSonnet
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
 
 # Hyperparameters
-batch_size = 1
+batch_size = 32
 learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
@@ -31,20 +32,14 @@ wandb.init(
     # set the wandb project where this run will be logged
     project="initial-testing",
     # track hyperparameters and run metadata
-    config={
-        "learning_rate": learning_rate,
-        "architecture": os.path.basename(__file__),
-        "dataset": "PTB-XL",
-        "epochs": num_epochs,
-        "parameter": "classification",
-    },
+    config={"learning_rate": learning_rate, "architecture": os.path.basename(__file__), "dataset": "PTB-XL", "epochs": num_epochs, "parameter": "classification", "sceduler": "CyclicLR"},
 )
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
-model = VisionTransformerOpus().to(device)
+model = VisionTransformerSonnet(40000, 5).to(device)
 
 # Create the dataset class
 dataset = ECGDataset()
@@ -67,9 +62,11 @@ train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_s
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Optimizer and loss function
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 criterion = nn.CrossEntropyLoss()
 
+# Learning rate scheduler
+scheduler = lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1, step_size_up=5, mode="triangular2")
 
 for epoch in range(num_epochs):
     model.train()
@@ -112,6 +109,10 @@ for epoch in range(num_epochs):
 
     # Log metrics
     print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+    print(f"Current learning rate is :", scheduler.get_last_lr())
+
+    # Update learning rate after each epoch
+    scheduler.step()
 
     # Validation loop
     model.eval()

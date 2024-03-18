@@ -21,23 +21,20 @@ class VisionTransformerSonnet(nn.Module):
 
         # Classification head
         self.classifier = nn.Linear(768, num_classes)
+        self.activation_func = nn.Sigmoid()
 
     def forward(self, x):
         # Reshape input to (batch_size, sequence_length, input_dim)
         x = rearrange(x, "b n -> b 1 n")
-
         # Embed input
         x = self.embedding(x)
-
         # Apply transformer encoder
         x = self.transformer_encoder(x)
-
         # Take the representation from the first token
         x = x[:, 0]
-
         # Classify
         x = self.classifier(x)
-
+        x = self.activation_func(x)
         return x
 
 
