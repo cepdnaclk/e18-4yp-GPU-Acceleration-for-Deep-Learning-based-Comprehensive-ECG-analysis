@@ -290,8 +290,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     def __len__(self):
         if IS_FULL_DATASET:
             # run full dataset on servers
-            #return self.ground_truths.shape[0]
-            return int(self.ground_truths.shape[0]/10)
+            return self.ground_truths.shape[0]
+            # return int(self.ground_truths.shape[0]/10)
 
         # limit to 1000 on local computers
         # return 1000
