@@ -167,15 +167,30 @@ class CnnDeepViT(nn.Module):
             heads=heads,
             mlp_dim=mlp_dim,
             pool=pool,
-            channels=128,  # Update channels based on the output channels of the last CNN layer
+            channels=512,  # Update channels based on the output channels of the last CNN layer
             dim_head=dim_head,
             dropout=dropout,
             emb_dropout=emb_dropout
         )
 
     def forward(self, img):
+
+        img = img.reshape(img.shape[0], 1, img.shape[3], img.shape[4])
+        # print('img.shape[0] : ', img.shape[0])
+        # print('img.shape[1] : ', img.shape[1])
+        # print('img.shape[2] : ', img.shape[2])
+        # print('img.shape[3] : ', img.shape[3])
+        # print('img.shape[4] : ', img.shape[4])
+
         # Apply CNN layers
         img = self.cnn_layers(img)
+
+        print('-------------- print(img.shape)',img.shape)
+        print('Output shape from CNN layers:', img.shape)  # Add this line
+        # img = img.reshape(101372)
+
+        # Reshape the output of the CNN layers to match the expected input shape of DeepViT
+        # img = img.reshape(img.shape[0], 1, 256, 256)
 
         # Apply DeepViT layers
         return self.deep_vit(img)

@@ -5,6 +5,7 @@ import datetime
 import wandb
 import os
 
+# from models.CNNDeepViT_2 import CnnDeepViT
 from models.CnnDeepViT import CnnDeepViT
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_ecg_dataset
@@ -35,7 +36,7 @@ wandb.init(
     },
 )
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = CnnDeepViT(
@@ -53,7 +54,6 @@ model = CnnDeepViT(
 
 # model = CnnDeepViT(image_size=256, patch_size=16, num_classes=10, dim=256, depth=12, heads=8, mlp_dim=512)
 
-# Create the dataset class
 # Create the dataset class
 dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
     parameter=parameter,
