@@ -5,6 +5,7 @@ import datetime
 import wandb
 import os
 import utils.current_server as current_server
+from sklearn.model_selection import train_test_split
 
 from models.SimpleLSTM import SimpleLSTM
 import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_dataset
@@ -41,11 +42,10 @@ dataset = deepfake_dataset.Deepfake_ECG_Dataset(
 )
 
 # Split the dataset into training and validation sets
-train_size = int(train_fraction * len(dataset))
-test_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(
-    dataset, [train_size, test_size]
-)
+train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+
+train_dataset = torch.utils.data.Subset(dataset, train_indices)
+val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
