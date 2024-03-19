@@ -20,16 +20,14 @@ class CombinedLSTMModel(nn.Module):
         )
         
     def forward(self, x):
-        ## I think instead of this we can use ;
-        # out1 = self.model1(x)
-        # out2 = self.model2(x)
-        # out3 = self.model3(x)
-        # out4 = self.model4(x)
-        ### buts lets go with this for now :)
-        out1 = self.model1.MLP(self.model1.lstm(x)[0]) 
-        out2 = self.model2.MLP(self.model2.lstm(x)[0])
-        out3 = self.model3.MLP(self.model3.lstm(x)[0])
-        out4 = self.model4.MLP(self.model4.lstm(x)[0])
+        out1 = self.model1(x)
+        out2 = self.model2(x)
+        out3 = self.model3(x)
+        out4 = self.model4(x)
+        # out1 = self.model1.MLP(self.model1.lstm(x)[0]) 
+        # out2 = self.model2.MLP(self.model2.lstm(x)[0])
+        # out3 = self.model3.MLP(self.model3.lstm(x)[0])
+        # out4 = self.model4.MLP(self.model4.lstm(x)[0])
         
         # Concatenate the features
         combined_features = torch.cat((out1, out2, out3, out4), dim=1)
