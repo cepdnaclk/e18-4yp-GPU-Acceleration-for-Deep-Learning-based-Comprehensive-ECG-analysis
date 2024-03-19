@@ -8,6 +8,7 @@ pip3 install tqdm==4.66.1
 pip install wfdb==4.1.2
 pip install wandb==0.16.1
 pip install einops==0.7.0
+pip install -U scikit-learn
 
 # after that 
 # 'wandb login' 

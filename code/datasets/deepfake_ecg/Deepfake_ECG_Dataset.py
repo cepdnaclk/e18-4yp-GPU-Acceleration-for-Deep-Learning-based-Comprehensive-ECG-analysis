@@ -97,7 +97,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             print("Cache found in /dev/shm. Loading from cache")
             self.loaded_asc_files = pickle.load(open(f"/dev/shm/deepfake-{self.parameter_name}.pkl", "rb"))
         else:
-            print("cache not found in /dev/shm. Creating cache now.")
+            print("cache not found in /dev/shm. Loading data from disk")
             for eachPatient in tqdm(self.ground_truths["patid"].values,desc="Loading ASC files"):
                 filename = eachPatient
                 ecg_signals = pandas.read_csv(
@@ -128,9 +128,11 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 # Store the loaded ASC file in the dictionary
                 self.loaded_asc_files[filename] = ecg_signals
             
-            if hostname != "turing":
+            if "ampere" in hostname:
                 print("saving file to ram")
                 pickle.dump(self.loaded_asc_files, open(f"/dev/shm/deepfake-{self.parameter_name}.pkl", "wb"))
+            else:
+                print("Not ampere. Not saving file to ram")
         
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
