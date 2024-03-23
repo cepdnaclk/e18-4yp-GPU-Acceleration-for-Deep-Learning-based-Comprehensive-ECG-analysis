@@ -8,7 +8,7 @@ import wandb
 import os
 from sklearn.model_selection import train_test_split
 
-from models.TransformerEncoderModel import TransformerEncoderModel
+from models.TransformerEncoderModel2 import TransformerEncoderModel
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
@@ -16,20 +16,16 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 
 # Hyperparameters
-batch_size = 1
-learning_rate = 0.001
-num_epochs = 1000
+batch_size = 32
+learning_rate = 0.0001
+num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
 
-# import torch
-# import torch.nn as nn
-# from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset, HR_PARAMETER
-# from tqdm import tqdm
 
 # Hyperparameters
 batch_size = 32
-learning_rate = 0.001
+# learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
 patch_size = 500
@@ -74,6 +70,9 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
+
+# Learning rate scheduler
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
 
 
 # Training loop
@@ -136,3 +135,6 @@ wandb.finish()
 import os
 
 os.system("cp -r mlruns ~/4yp/")
+
+
+

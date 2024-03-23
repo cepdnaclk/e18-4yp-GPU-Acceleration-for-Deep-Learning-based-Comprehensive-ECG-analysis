@@ -5,8 +5,8 @@ import datetime
 import wandb
 import os
 
-from models.Encoder_CNN_RNN import TransformerEncoderModel
-from models.Encoder_CNN_RNN import CNN_RNN_Model
+from code.models.TrasnformerEncoderCnn import TransformerEncoderModel
+from code.models.TrasnformerEncoderCnn import CNN_RNN_Model
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 
