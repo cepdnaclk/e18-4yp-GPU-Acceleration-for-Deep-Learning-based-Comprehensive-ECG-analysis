@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 25 # used to be 1000 : HR was best around 500 ep
+num_epochs = 25  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
 parameter = QT_PARAMETER
 
@@ -113,15 +113,15 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / len(train_dataloader),
-            "val_loss": val_loss / len(val_dataloader),
+            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 
-    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
-    
-    if((val_loss / len(val_dataloader))<best_validation_loss):
+    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
+
+    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
         best_validation_loss = val_loss
         best_model = model
 

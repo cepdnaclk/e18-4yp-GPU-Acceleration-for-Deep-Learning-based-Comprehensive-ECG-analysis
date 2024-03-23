@@ -57,23 +57,15 @@ val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
-    print(
-        f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4"
-    )
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
     num_workers = 4
 else:
-    print(
-        f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0"
-    )
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
     num_workers = 0
 
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers
-)
-val_dataloader = torch.utils.data.DataLoader(
-    val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers
-)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -119,13 +111,13 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / len(train_dataloader),
-            "val_loss": val_loss / len(val_dataloader),
+            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 
-    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

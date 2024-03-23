@@ -41,17 +41,7 @@ device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 print(device)
 
 # Create the model
-model = DeepViT(
-    image_size = 256,
-    patch_size = 32,
-    num_classes = 1,
-    dim = 1024,
-    depth = 6,
-    heads = 9, # 16
-    mlp_dim = 2048,
-    dropout = 0.1,
-    emb_dropout = 0.1
-).to(device)
+model = DeepViT(image_size=256, patch_size=32, num_classes=1, dim=1024, depth=6, heads=9, mlp_dim=2048, dropout=0.1, emb_dropout=0.1).to(device)  # 16
 
 # Create the dataset class
 # Create the dataset class
@@ -124,13 +114,13 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / len(train_dataloader),
-            "val_loss": val_loss / len(val_dataloader),
+            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 
-    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader)*batch_size)}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
