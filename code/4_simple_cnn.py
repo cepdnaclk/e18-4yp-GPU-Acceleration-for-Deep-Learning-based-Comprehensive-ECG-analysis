@@ -23,7 +23,7 @@ parameter = HR_PARAMETER
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="initial-testing",
+    project="version2",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -101,8 +101,8 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss /  (len(train_dataloader)*batch_size),
-            "val_loss": val_loss /  (len(val_dataloader)*batch_size),
+            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 

@@ -26,7 +26,7 @@ train_fraction = 0.8
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="initial-testing",
+    project="version2",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -108,9 +108,7 @@ for epoch in range(num_epochs):
     train_auc_roc = roc_auc_score(all_labels, all_outputs)
 
     # Log metrics
-    print(
-        f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}"
-    )
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     # Validation loop
     model.eval()
     total_correct = 0
@@ -148,16 +146,14 @@ for epoch in range(num_epochs):
         val_auc_roc = roc_auc_score(all_labels, all_outputs)
 
         # Log metrics
-        print(
-            f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}"
-        )
+        print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     #  Log metrics
     wandb.log(
         {
             "train_accuracy": train_accuracy,
-            "train_AUC" : train_auc_roc,
+            "train_AUC": train_auc_roc,
             "val_accuracy": val_accuracy,
-            "val_AUC" : val_auc_roc,
+            "val_AUC": val_auc_roc,
         }
     )
 

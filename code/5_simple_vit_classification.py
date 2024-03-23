@@ -18,7 +18,7 @@ train_fraction = 0.8
 # start a new wandb run to track this script
 # start a new wandb run to track this script
 wandb.init(
-    project="initial-testing",
+    project="version2",
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
@@ -28,7 +28,7 @@ wandb.init(
     },
 )
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-print("Device : ",device)
+print("Device : ", device)
 # Create the model
 model = SimpleViTClassification(input_size=40000, num_classes=5).to(device)
 
@@ -38,17 +38,11 @@ dataset = ECGDataset()
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
 test_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(
-    dataset, [train_size, test_size]
-)
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True, num_workers=0
-)
-val_dataloader = torch.utils.data.DataLoader(
-    val_dataset, batch_size=batch_size, shuffle=False, num_workers=0
-)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)

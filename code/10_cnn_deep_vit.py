@@ -25,7 +25,7 @@ parameter = HR_PARAMETER
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="initial-testing",
+    project="version2",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -39,17 +39,7 @@ wandb.init(
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
-model = CnnDeepViT(
-    image_size = 256,
-    patch_size = 32,
-    num_classes = 1,
-    dim = 1024,
-    depth = 6,
-    heads = 9, # 16
-    mlp_dim = 2048,
-    dropout = 0.1,
-    emb_dropout = 0.1
-).to(device)
+model = CnnDeepViT(image_size=256, patch_size=32, num_classes=1, dim=1024, depth=6, heads=9, mlp_dim=2048, dropout=0.1, emb_dropout=0.1).to(device)  # 16
 
 
 # model = CnnDeepViT(image_size=256, patch_size=16, num_classes=10, dim=256, depth=12, heads=8, mlp_dim=512)
@@ -123,8 +113,8 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss /  (len(train_dataloader)*batch_size),
-            "val_loss": val_loss / (len(val_dataloader)*batch_size),
+            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 

@@ -16,10 +16,10 @@ start_time = time.time()
 
 # Load the pre-trained models
 # TODO : add the correct paths to here >>>
-model1 = torch.load('saved_models/20240316_213941') # HR
-model2 = torch.load('saved_models/20240316_214905') # QRS
-model3 = torch.load('saved_models/20240316_213941') # HR
-model4 = torch.load('saved_models/20240316_214905') # QRS 
+model1 = torch.load("saved_models/20240316_213941")  # HR
+model2 = torch.load("saved_models/20240316_214905")  # QRS
+model3 = torch.load("saved_models/20240316_213941")  # HR
+model4 = torch.load("saved_models/20240316_214905")  # QRS
 
 # Remove the last layer (MLP) from each model
 model1.lstm.flatten_parameters()
@@ -37,13 +37,13 @@ model4.MLP = torch.nn.Sequential(*list(model4.MLP.children())[:-2])
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.001
-num_epochs = 50 
+num_epochs = 50
 train_fraction = 0.8
 
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="initial-testing",
+    project="version2",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -53,7 +53,6 @@ wandb.init(
         "parameter": "classification",
     },
     notes="transfer learning test3 LSTM",
-
 )
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
@@ -125,9 +124,7 @@ for epoch in range(num_epochs):
     train_auc_roc = roc_auc_score(all_labels, all_outputs)
 
     # Log metrics
-    print(
-        f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}"
-    )
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     # Validation loop
     model.eval()
     total_correct = 0
@@ -165,16 +162,14 @@ for epoch in range(num_epochs):
         val_auc_roc = roc_auc_score(all_labels, all_outputs)
 
         # Log metrics
-        print(
-            f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}"
-        )
+        print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     #  Log metrics
     wandb.log(
         {
             "train_accuracy": train_accuracy,
-            "train_AUC" : train_auc_roc,
+            "train_AUC": train_auc_roc,
             "val_accuracy": val_accuracy,
-            "val_AUC" : val_auc_roc,
+            "val_AUC": val_auc_roc,
         }
     )
 
