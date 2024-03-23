@@ -72,7 +72,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
 
 # Learning rate scheduler
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, T_max=num_epochs)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
+
 
 
 # Training loop
