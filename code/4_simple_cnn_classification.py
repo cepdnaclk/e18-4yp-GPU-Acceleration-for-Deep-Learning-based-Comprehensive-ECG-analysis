@@ -20,7 +20,7 @@ train_fraction = 0.8
 
 # start a new wandb run to track this script
 wandb.init(
-    project="initial-testing",
+    project="version2",
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),

@@ -1,22 +1,25 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import datetime
+import time
 import wandb
 import os
-from sklearn.model_selection import train_test_split
-
-from models.SimpleCNN import SimpleCNN
+from models.Wave2vec2 import Wave2Vec2
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
+from sklearn.model_selection import train_test_split
+
+# Record the start time
+start_time = time.time()
+
 
 # Hyperparameters
-batch_size = 1
-learning_rate = 0.01
-num_epochs = 1000
+batch_size = 16
+learning_rate = 0.001
+num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
 
@@ -34,10 +37,11 @@ wandb.init(
     },
 )
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+# device = "cpu"
 
 # Create the model
-model = SimpleCNN().to(device)
+model = Wave2Vec2().to(device)
 
 # Create the dataset class
 dataset = Deepfake_ECG_Dataset(parameter=parameter)
@@ -52,7 +56,6 @@ val_dataset = torch.utils.data.Subset(dataset, val_indices)
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
-
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
@@ -61,7 +64,7 @@ criterion = nn.L1Loss()
 # Training loop
 for epoch in range(num_epochs):
     model.train()
-    train_loss = 0.0
+    train_running_loss = 0.0
     for i, data in tqdm(
         enumerate(train_dataloader, 0),
         total=len(train_dataloader),
@@ -76,11 +79,14 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        train_loss += loss.item()
+        train_running_loss += loss.item()
+
+    # Log metrics
+    print(f"Epoch: {epoch} train_loss: {train_running_loss / (len(train_dataloader)*batch_size)}")
 
     # Validation loop
     model.eval()
-    val_loss = 0.0
+    val_running_loss = 0.0
     with torch.no_grad():
         for i, data in tqdm(
             enumerate(val_dataloader, 0),
@@ -96,29 +102,17 @@ for epoch in range(num_epochs):
             #         print(f"Predicted: {outputs[x]} Real: {labels[x]}")
             loss = criterion(outputs, labels)
 
-            val_loss += loss.item()
+            val_running_loss += loss.item()
 
-    #  Log metrics
-    wandb.log(
-        {
-            "train_loss": train_loss / (len(train_dataloader) * batch_size),
-            "val_loss": val_loss / (len(val_dataloader) * batch_size),
-        }
-    )
-
-    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
-
-# Save the trained model with date and time in the path
-current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-torch.save(model, model_path)
+        #  Log metrics
+    wandb.log({"train_loss": train_running_loss / (len(train_dataloader) * batch_size), "val_loss": val_running_loss / (len(val_dataloader) * batch_size)})
+    print(f"Epoch: {epoch} val_loss: {val_running_loss /  (len(val_dataloader)*batch_size)}")
 
 print("Finished Training")
-wandb.finish()
 
-# create a backup of mlruns in babbage server
-# "Turing is not stable, data could be lost" - Akila E17
-import os
+# Record the end time
+end_time = time.time()
 
-os.system("cp -r mlruns ~/4yp/")
+# Calculate and print the runtime
+runtime = end_time - start_time
+print(f"Runtime: {runtime} seconds")

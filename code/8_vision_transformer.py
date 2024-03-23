@@ -22,7 +22,7 @@ parameter = deepfake_ecg_dataset.HR_PARAMETER
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="initial-testing",
+    project="version2",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,

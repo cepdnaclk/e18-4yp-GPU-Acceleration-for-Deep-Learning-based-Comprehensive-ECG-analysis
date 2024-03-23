@@ -16,7 +16,7 @@ test_fraction = 0.2
 
 # start a new wandb run to track this script
 wandb.init(
-    project="initial-testing",
+    project="version2",
     config={
         "model": "DecisionTree",
         "dataset": "PTB-XL",
@@ -71,4 +71,3 @@ end_time = time.time()
 # Calculate and print the runtime
 runtime = end_time - start_time
 print(f"Runtime: {runtime} seconds")
-
