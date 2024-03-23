@@ -37,6 +37,20 @@ num_layers = 4
 num_heads = 8
 dim_feedforward = 2048
 
+# start a new wandb run to track this script
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="initial-testing",
+    # track hyperparameters and run metadata
+    config={
+        "learning_rate": learning_rate,
+        "architecture": os.path.basename(__file__),
+        "dataset": "Deepfake_ECG_Dataset",
+        "epochs": num_epochs,
+        "parameter": parameter,
+    },
+)
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
@@ -61,7 +75,7 @@ criterion = nn.L1Loss()
 # Training loop
 for epoch in range(num_epochs):
     model.train()
-    running_loss = 0.0
+    train_loss = 0.0
     for i, data in tqdm(enumerate(train_dataloader, 0), total=len(train_dataloader), desc=f"Training Epoch {epoch + 1}/{num_epochs}"):
         inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
@@ -72,13 +86,13 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        running_loss += loss.item()
+        train_loss += loss.item()
 
-    print(f"Epoch: {epoch} train_loss: {running_loss / len(train_dataloader)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
 
     # Validation loop
     model.eval()
-    running_loss = 0.0
+    val_loss = 0.0
     with torch.no_grad():
         for i, data in tqdm(enumerate(val_dataloader, 0), total=len(val_dataloader), desc=f"Validating Epoch {epoch + 1}/{num_epochs}"):
             inputs, labels = data
@@ -87,8 +101,33 @@ for epoch in range(num_epochs):
             outputs = model(inputs)
             loss = criterion(outputs, labels)
 
-            running_loss += loss.item()
+            val_loss += loss.item()
 
-        print(f"Epoch: {epoch} val_loss: {running_loss / len(val_dataloader)}")
+        print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
+
+
+    #  Log metrics
+    wandb.log(
+        {
+            "train_loss": train_loss / len(train_dataloader),
+            "val_loss": val_loss / len(val_dataloader),
+        }
+    )
+
+    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
+    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
+
+# Save the trained model with date and time in the path
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = f"saved_models/{current_time}"
+# model_path = f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/saved_models/{current_time}"
+torch.save(model, model_path)
+
 
 print("Finished Training")
+wandb.finish()
+
+# create a backup of mlruns in babbage server
+# "Turing is not stable, data could be lost" - Akila E17
+import os
+os.system("cp -r mlruns ~/4yp/")
