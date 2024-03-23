@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import math
 
-class TransformerEncoderModel(nn.Module):
+class TrasnformerEncoderCnnModel(nn.Module):
     def __init__(self, input_size, patch_size, num_layers, num_heads, dim_feedforward, output_size):
-        super(TransformerEncoderModel, self).__init__()
+        super(TrasnformerEncoderCnnModel, self).__init__()
         self.embedding_layer = nn.Linear(patch_size, input_size)
         self.pos_encoder = PositionalEncoding(input_size)
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=input_size, nhead=num_heads, dim_feedforward=dim_feedforward)
