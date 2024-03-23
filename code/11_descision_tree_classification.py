@@ -20,6 +20,9 @@ wandb.init(
     config={
         "model": "DecisionTree",
         "dataset": "PTB-XL",
+        "architecture": os.path.basename(__file__),
+        "dataset": "PTB-XL",
+        "parameter": "classification",
     },
 )
 
