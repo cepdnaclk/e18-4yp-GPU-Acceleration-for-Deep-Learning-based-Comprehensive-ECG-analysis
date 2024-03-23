@@ -4,7 +4,7 @@ from tqdm import tqdm
 import time
 import wandb
 import os
-from models.SimpleNeuralNetwork import SimpleNeuralNetwork
+from models.Wave2vec2 import Wave2Vec2
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
@@ -41,7 +41,7 @@ device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 # device = "cpu"
 
 # Create the model
-model = SimpleNeuralNetwork().to(device)
+model = Wave2Vec2().to(device)
 
 # Create the dataset class
 dataset = Deepfake_ECG_Dataset(parameter=parameter)
