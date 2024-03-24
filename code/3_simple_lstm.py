@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 25  # used to be 1000 : HR was best around 500 ep
+num_epochs = 50  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
 parameter = QT_PARAMETER
 
