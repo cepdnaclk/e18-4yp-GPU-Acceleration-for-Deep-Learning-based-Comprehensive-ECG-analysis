@@ -16,7 +16,7 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 # Hyperparameters
 batch_size = 1
 learning_rate = 0.01
-num_epochs = 1000
+num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
 

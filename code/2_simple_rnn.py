@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 2000
+num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
 

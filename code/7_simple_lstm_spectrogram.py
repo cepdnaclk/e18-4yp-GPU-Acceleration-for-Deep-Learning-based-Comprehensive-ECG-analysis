@@ -13,7 +13,7 @@ import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_dataset
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 200
+num_epochs = 50
 train_fraction = 0.8
 parameter = deepfake_dataset.HR_PARAMETER
 
