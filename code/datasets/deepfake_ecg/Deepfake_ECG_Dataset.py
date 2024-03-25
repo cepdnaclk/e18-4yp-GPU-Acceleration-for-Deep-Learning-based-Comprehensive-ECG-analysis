@@ -92,47 +92,13 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # Dictionary to store loaded ASC files
         self.loaded_asc_files = {}
         
-        # check if /dev/shm/{parameter}.pkl exists
-        if os.path.exists(f"/dev/shm/deepfake-{self.parameter_name}.pkl"):
-            print("Cache found in /dev/shm. Loading from cache")
-            self.loaded_asc_files = pickle.load(open(f"/dev/shm/deepfake-{self.parameter_name}.pkl", "rb"))
+                # check if /dev/shm/{parameter}.pkl exists
+        if os.path.exists(f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977"):
+            print("Files found in ram. Continuing")
         else:
-            print("cache not found in /dev/shm. Loading data from disk")
-            for eachPatient in tqdm(self.ground_truths["patid"].values,desc="Loading ASC files"):
-                filename = eachPatient
-                ecg_signals = pandas.read_csv(
-                    f"datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
-                    header=None,
-                    sep=" ",
-                )
-                
-                if self.output_type == DEFAULT_OUTPUT_TYPE:
-                    ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
-                elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
-                    ecg_signals = self.convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(
-                        ecg_signals
-                    )
-                elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
-                    ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(
-                        ecg_signals
-                    )
-                elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY:
-                    ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(
-                        ecg_signals
-                    )
-                elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
-                    ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(
-                        ecg_signals
-                    )
+            raise Exception("Files not found in ram. Exiting. Ask Ishan how to load files to ram. This will be automated later.")
+        
 
-                # Store the loaded ASC file in the dictionary
-                self.loaded_asc_files[filename] = ecg_signals
-            
-            if "ampere" in hostname:
-                print("saving file to ram")
-                pickle.dump(self.loaded_asc_files, open(f"/dev/shm/deepfake-{self.parameter_name}.pkl", "wb"))
-            else:
-                print("Not ampere. Not saving file to ram")
         
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
@@ -291,11 +257,30 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         filename = self.ground_truths["patid"].values[index]
 
-        # Check if the ASC file is already loaded
-        if filename in self.loaded_asc_files:
-            ecg_signals = self.loaded_asc_files[filename]
-        else:
-            print("file not found. impossible")
+        ecg_signals = pandas.read_csv(
+            f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
+            header=None,
+            sep=" ",
+        )
+        
+        if self.output_type == DEFAULT_OUTPUT_TYPE:
+            ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
+        elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
+            ecg_signals = self.convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(
+                ecg_signals
+            )
+        elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
+            ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE(
+                ecg_signals
+            )
+        elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY:
+            ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(
+                ecg_signals
+            )
+        elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
+            ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(
+                ecg_signals
+            )
 
         parameter = self.parameter[index].reshape(-1)
 
