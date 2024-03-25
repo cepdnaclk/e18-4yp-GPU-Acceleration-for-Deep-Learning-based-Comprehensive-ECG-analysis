@@ -1,3 +1,5 @@
+import utils.others as others
+print(f"Last updated by: ",others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -19,7 +21,7 @@ batch_size = 32
 learning_rate = 0.01
 num_epochs = 50  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
-parameter = QT_PARAMETER
+parameter = HR_PARAMETER
 
 best_model = None
 best_validation_loss = 1000000
@@ -36,7 +38,7 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": parameter,
     },
-    notes="LSTM : regression : QT take 1 : save the best model",
+    notes="",
 )
 
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")

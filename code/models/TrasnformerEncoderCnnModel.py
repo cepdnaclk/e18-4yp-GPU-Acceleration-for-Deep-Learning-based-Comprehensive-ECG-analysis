@@ -2,6 +2,11 @@ import torch
 import torch.nn as nn
 import math
 
+# linear count is  19
+# cnn count is  3
+# trans count is  5
+# posi count is  1
+
 class TrasnformerEncoderCnnModel(nn.Module):
     def __init__(self, input_size, patch_size, num_layers, num_heads, dim_feedforward, output_size):
         super(TrasnformerEncoderCnnModel, self).__init__()
@@ -27,6 +32,32 @@ class TrasnformerEncoderCnnModel(nn.Module):
         )
         
         self.patch_size = patch_size
+        # self.reset_parameters()  # Initialize weights and biases
+        # print("#=========Initialization to 1 and 0 done========")
+ 
+    def reset_parameters(self):
+    # Initialize weights to 1 and biases to 0
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Conv1d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.TransformerEncoderLayer):
+                # Initialize the layers in the TransformerEncoderLayer
+                nn.init.constant_(m.linear1.weight, 1)
+                nn.init.constant_(m.linear1.bias, 0)
+                nn.init.constant_(m.linear2.weight, 1)
+                nn.init.constant_(m.linear2.bias, 0)
+                nn.init.constant_(m.self_attn.in_proj_weight, 1)
+                nn.init.constant_(m.self_attn.in_proj_bias, 0)
+                nn.init.constant_(m.self_attn.out_proj.weight, 1)
+                nn.init.constant_(m.self_attn.out_proj.bias, 0)
+            elif isinstance(m, PositionalEncoding):
+                # No need to initialize the PositionalEncoding module
+                # since it doesn't have any learnable parameters.
+                pass
 
     def forward(self, x):
         batch_size, _ = x.size()
