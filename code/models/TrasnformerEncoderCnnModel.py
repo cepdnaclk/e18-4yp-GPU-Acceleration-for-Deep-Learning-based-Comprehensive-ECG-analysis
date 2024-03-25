@@ -39,8 +39,8 @@ class TrasnformerEncoderCnnModel(nn.Module):
         )
         
         self.patch_size = patch_size
-        self.reset_parameters()  # Initialize weights and biases
-        print("Initialization to 1 and 0 done...")
+        # self.reset_parameters()  # Initialize weights and biases
+        # print("#=========Initialization to 1 and 0 done========")
  
     def reset_parameters(self):
     # Initialize weights to 1 and biases to 0
