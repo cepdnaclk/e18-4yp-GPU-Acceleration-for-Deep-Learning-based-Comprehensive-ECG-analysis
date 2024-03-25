@@ -4,6 +4,7 @@ from tqdm import tqdm
 import time
 import datetime
 import wandb
+import os
 
 from models.SimpleNeuralNetwork import SimpleNeuralNetwork
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
@@ -120,11 +121,10 @@ for epoch in range(num_epochs):
 
 print("Finished Training")
 
-# create a backup of mlruns in babbage server
-# "Turing is not stable, data could be lost" - Akila E17
-import os
-
-os.system("cp -r mlruns ~/4yp/")
+# Save the trained model with date and time in the path
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = f"saved_models/{current_time}"
+torch.save(model, model_path)
 
 # Record the end time
 end_time = time.time()
