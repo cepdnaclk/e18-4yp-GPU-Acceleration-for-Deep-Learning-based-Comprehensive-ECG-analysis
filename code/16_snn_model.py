@@ -4,23 +4,20 @@ from tqdm import tqdm
 import datetime
 import wandb
 import os
-from sklearn.model_selection import train_test_split
 
-from models.DeepViT import DeepViT
+from models.SnnModel import SnnModel
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
-import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_ecg_dataset
-
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
+from sklearn.model_selection import train_test_split
 
 # Hyperparameters
-batch_size = 1
-learning_rate = 0.02
-num_epochs = 50
+batch_size = 32
+learning_rate = 0.01
+num_epochs = 2000
 train_fraction = 0.8
-validation_fraction = 0.2
 parameter = HR_PARAMETER
 
 # start a new wandb run to track this script
@@ -31,28 +28,19 @@ wandb.init(
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
-        "dataset": "Deepfake_ECG_Dataset DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE",
+        "dataset": "Deepfake_ECG_Dataset",
         "epochs": num_epochs,
         "parameter": parameter,
     },
 )
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-print(device)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
-model = DeepViT(image_size=256, patch_size=32, num_classes=1, dim=1024, depth=6, heads=9, mlp_dim=2048, dropout=0.1, emb_dropout=0.1).to(device)  # 16
+model = SnnModel().to(device)
 
 # Create the dataset class
-# Create the dataset class
-dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
-    parameter=parameter,
-    output_type=deepfake_ecg_dataset.DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE,
-)
-
-print("About dataset : ", type(dataset))
-
-# print(dataset)
+dataset = Deepfake_ECG_Dataset(parameter=parameter)
 
 # Split the dataset into training and validation sets
 train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
@@ -69,9 +57,6 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
 
-# Learning rate scheduler
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
-
 
 # Training loop
 for epoch in range(num_epochs):
@@ -86,8 +71,7 @@ for epoch in range(num_epochs):
         inputs, labels = inputs.to(device), labels.to(device)
 
         optimizer.zero_grad()
-        mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
-        outputs = model(inputs.float())
+        outputs = model(inputs)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -105,8 +89,8 @@ for epoch in range(num_epochs):
         ):
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
-            mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
-            outputs = model(inputs.float())
+
+            outputs = model(inputs)
             # if i == 0:
             #     for x in range(len(outputs)):
             #         print(f"Predicted: {outputs[x]} Real: {labels[x]}")
@@ -115,19 +99,15 @@ for epoch in range(num_epochs):
             val_loss += loss.item()
 
     #  Log metrics
-    wandb.log(
-        {
-            "train_loss": train_loss / (len(train_dataloader) * batch_size),
-            "val_loss": val_loss / (len(val_dataloader) * batch_size),
-        }
-    )
+    wandb.log({"train_loss": train_loss / (len(train_dataloader) * batch_size), "val_loss": val_loss / (len(val_dataloader) * batch_size)})
 
-    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader)*batch_size)}")
     print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader)*batch_size)}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 model_path = f"saved_models/{current_time}"
+# model_path = f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/saved_models/{current_time}"
 torch.save(model, model_path)
 
 print("Finished Training")

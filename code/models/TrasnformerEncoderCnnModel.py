@@ -10,13 +10,6 @@ class TrasnformerEncoderCnnModel(nn.Module):
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=input_size, nhead=num_heads, dim_feedforward=dim_feedforward)
         self.encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers)
         
-        # Simplified linear output layer
-        self.linear_output = nn.Sequential(
-            nn.Linear(input_size, 256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, output_size)
-        )
         
         # Deep CNN output layer
         self.cnn_output = nn.Sequential(
@@ -43,15 +36,13 @@ class TrasnformerEncoderCnnModel(nn.Module):
         x = self.pos_encoder(x)
         x = self.encoder(x)
         x = x.mean(dim=1)
-        
-        # Apply linear output layer
-        linear_out = self.linear_output(x)
-        
+  
         # Apply CNN output layer
         cnn_out = self.cnn_output(x.unsqueeze(1))
         
-        # Combine the outputs (e.g., addition or concatenation)
-        output = linear_out + cnn_out
+      
+        output = cnn_out
+
         
         return output
 
