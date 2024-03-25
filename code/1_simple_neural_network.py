@@ -92,7 +92,7 @@ for epoch in range(num_epochs):
         train_running_loss += loss.item()
 
     # Log metrics
-    print(f"Epoch: {epoch} train_loss: {train_running_loss / len(train_dataloader)}")
+    print(f"Epoch: {epoch} train_loss: {train_running_loss /(len(train_dataloader) * batch_size)}")
 
     # Validation loop
     model.eval()
@@ -114,7 +114,7 @@ for epoch in range(num_epochs):
 
             val_running_loss += loss.item()
 
-    print(f"Epoch: {epoch} val_loss: {val_running_loss / len(val_dataloader)}")
+    print(f"Epoch: {epoch} val_loss: {val_running_loss / (len(val_dataloader) * batch_size)}")
     #  Log metrics
     wandb.log({"train_loss": train_running_loss / (len(train_dataloader) * batch_size), "val_loss": val_running_loss / (len(val_dataloader) * batch_size)})
 
