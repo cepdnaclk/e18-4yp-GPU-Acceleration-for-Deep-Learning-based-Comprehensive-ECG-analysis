@@ -48,6 +48,8 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": parameter,
     },
+    notes="",
+
 )
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
