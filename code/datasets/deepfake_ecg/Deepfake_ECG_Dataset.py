@@ -91,13 +91,19 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         # Dictionary to store loaded ASC files
         self.loaded_asc_files = {}
+        self.asc_files_path = ""
         
-                # check if /dev/shm/{parameter}.pkl exists
-        if os.path.exists(f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977"):
-            print("Files found in ram. Continuing")
+        path_in_ram = f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977/"        
+        if hostname == "ampere":
+            print("Running in ampere server. Checking if data is available in ram")
+            if os.path.exists(path_in_ram):
+                print("Files found in ram. Continuing")
+                self.asc_files_path = path_in_ram
+            else:
+                raise Exception("Files not found in ram. Exiting. Ask Ishan how to load files to ram. This will be automated later.")
         else:
-            raise Exception("Files not found in ram. Exiting. Ask Ishan how to load files to ram. This will be automated later.")
-        
+            print("Not running in ampere. Loading data from disk")
+            self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
 
         
 
@@ -258,7 +264,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         filename = self.ground_truths["patid"].values[index]
 
         ecg_signals = pandas.read_csv(
-            f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977/{filename}.asc",
+            f"{self.asc_files_path}{filename}.asc",
             header=None,
             sep=" ",
         )
