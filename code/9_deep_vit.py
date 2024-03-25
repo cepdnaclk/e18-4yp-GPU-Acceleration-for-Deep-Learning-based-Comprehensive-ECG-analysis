@@ -69,6 +69,9 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
 
+# Learning rate scheduler
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, T_max=num_epochs)
+
 
 # Training loop
 for epoch in range(num_epochs):
