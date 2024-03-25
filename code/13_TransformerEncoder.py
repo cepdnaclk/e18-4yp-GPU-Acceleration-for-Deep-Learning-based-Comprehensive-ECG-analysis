@@ -14,6 +14,8 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
+import utils.current_server as current_server
+
 
 # Hyperparameters
 batch_size = 1
@@ -66,9 +68,17 @@ train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 -
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
 val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
+# set num_workers
+if current_server.is_running_in_server():
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
+    num_workers = 4
+else:
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
+    num_workers = 0
+
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 
 # Optimizer and loss function
