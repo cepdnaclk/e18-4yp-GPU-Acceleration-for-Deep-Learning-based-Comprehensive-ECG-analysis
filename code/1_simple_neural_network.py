@@ -1,3 +1,6 @@
+import utils.others as others
+print(f"Last updated by: ",others.get_latest_update_by())
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm

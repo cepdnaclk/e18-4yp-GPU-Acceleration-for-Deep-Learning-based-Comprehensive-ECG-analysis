@@ -14,10 +14,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-print("#####################################")
-print("------Last changed by-----Ridma------")
-print("#####################################")
-
 # decide to run the full dataset or no based on the server or local machine
 hostname = socket.gethostname()
 
