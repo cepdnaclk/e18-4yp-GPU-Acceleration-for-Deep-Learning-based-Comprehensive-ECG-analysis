@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -33,7 +34,7 @@ wandb.init(
     },
 )
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = SimpleLSTM(input_size=22962).to(device)
