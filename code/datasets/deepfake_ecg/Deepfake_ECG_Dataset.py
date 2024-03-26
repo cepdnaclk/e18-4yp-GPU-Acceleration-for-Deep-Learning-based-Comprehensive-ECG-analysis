@@ -9,7 +9,7 @@ from tqdm import tqdm
 import pickle
 import os
 import socket
-
+import utils.current_server as current_server
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -17,8 +17,7 @@ from PIL import Image
 # decide to run the full dataset or no based on the server or local machine
 hostname = socket.gethostname()
 
-server_hostnames = ["ampere", "turing", "aiken"]
-if hostname in server_hostnames:
+if hostname in current_server.server_hostnames:
     # run full dataset on servers
     IS_FULL_DATASET = True
     print("Running full dataset")
