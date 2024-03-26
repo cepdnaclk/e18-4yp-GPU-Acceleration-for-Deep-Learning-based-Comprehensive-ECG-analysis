@@ -99,11 +99,42 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 print("Files found in ram. Continuing")
                 self.asc_files_path = path_in_ram
             else:
-                raise Exception("Files not found in ram. Exiting. Ask Ishan how to load files to ram. This will be automated later.")
+                self.download_and_extract_dataset_to_ram()
         else:
             print("Not running in ampere. Loading data from disk")
             self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
+            
+    def download_and_extract_dataset_to_ram(self):
+        import os
+        import shutil
+        import tarfile
+        import requests
 
+        # Change the current working directory to /dev/shm
+        os.chdir("/dev/shm")
+
+        # Download the file
+        url = "https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977.tar.gz"
+        print("Downloading the dataset... This will only happen once every server restart")
+        response = requests.get(url, stream=True)
+        print("Downloaded the dataset")
+
+        # Save the file
+        with open("filtered_all_normals_121977.tar.gz", "wb") as file:
+            print("Saving the dataset...")
+            shutil.copyfileobj(response.raw, file)
+            print("Saved the dataset")
+
+        # Extract the archive
+        with tarfile.open("filtered_all_normals_121977.tar.gz", "r:gz") as tar:
+            print("Extracting the dataset...")
+            tar.extractall()
+            print("Extracted the dataset")
+
+        # Remove the archive file
+        print("Removing the archive file...")
+        os.remove("filtered_all_normals_121977.tar.gz")
+        print("Removed the archive file")
         
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
