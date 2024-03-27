@@ -9,6 +9,7 @@ from tqdm import tqdm
 import pickle
 import os
 import socket
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -115,26 +116,26 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
         # Download the file
         url = "https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977.tar.gz"
-        print("Downloading the dataset... This will only happen once every server restart")
+        print_with_timestamp("Downloading the dataset... This will only happen once every server restart")
         response = requests.get(url, stream=True)
-        print("Downloaded the dataset")
+        print_with_timestamp("Downloaded the dataset")
 
         # Save the file
         with open("filtered_all_normals_121977.tar.gz", "wb") as file:
-            print("Saving the dataset...")
+            print_with_timestamp("Saving the dataset...")
             shutil.copyfileobj(response.raw, file)
-            print("Saved the dataset")
+            print_with_timestamp("Saved the dataset")
 
         # Extract the archive
         with tarfile.open("filtered_all_normals_121977.tar.gz", "r:gz") as tar:
-            print("Extracting the dataset...")
+            print_with_timestamp("Extracting the dataset...")
             tar.extractall()
-            print("Extracted the dataset")
+            print_with_timestamp("Extracted the dataset")
 
         # Remove the archive file
-        print("Removing the archive file...")
+        print_with_timestamp("Removing the archive file...")
         os.remove("filtered_all_normals_121977.tar.gz")
-        print("Removed the archive file")
+        print_with_timestamp("Removed the archive file")
         
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
@@ -331,7 +332,21 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # limit to 1000 on local computers
         # return 1000
         return 999
-    
+
+# Function to print with timestamp and time difference
+def print_with_timestamp(message):
+    global last_print_time
+    current_time = datetime.now()
+    if 'last_print_time' not in globals():
+        time_diff = None
+    else:
+        time_diff = (current_time - last_print_time).total_seconds()
+    timestamp = current_time.strftime("[%Y-%m-%d %H:%M:%S]")
+    if time_diff is not None:
+        print(f"{timestamp} (Time Taken: {time_diff:.2f} seconds) {message}")
+    else:
+        print(f"{timestamp} {message}")
+    last_print_time = current_time    
     
 if __name__ == "__main__":
     from PIL import Image
