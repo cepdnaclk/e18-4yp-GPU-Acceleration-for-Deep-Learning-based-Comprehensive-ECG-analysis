@@ -53,6 +53,9 @@ num_layers = 4
 num_heads = 8
 dim_feedforward = 2048
 
+best_model = None
+best_validation_loss = 1000000
+
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
@@ -147,13 +150,18 @@ for epoch in range(num_epochs):
 
     print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader)*batch_size)}")
     print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader)*batch_size)}")
+    
+    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+        best_validation_loss = val_loss
+        best_model = model
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-# model_path = f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/saved_models/{current_time}"
-torch.save(model, model_path)
+model_name = "13_Transformer_enc_2_HR_"  # Your specific model name prefix
+model_path = f"saved_models/{model_name}{current_time}"
 
+torch.save(best_model, model_path)
+print("Best Model Saved")
 print("Finished Training")
 wandb.finish()
 

@@ -39,6 +39,9 @@ random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
+    
+best_model = None
+best_validation_loss = 1000000
 
 # Set device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -111,11 +114,19 @@ for epoch in range(num_epochs):
     })
 
     print(f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss / len(train_loader)}, Val Loss: {val_loss / len(val_loader)}")
+    
+    if (val_loss / (len(val_loader) * batch_size)) < best_validation_loss:
+        best_validation_loss = val_loss
+        best_model = model
 
 # Save the trained model
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-torch.save(model.state_dict(), model_path)
+model_name = "10_cnn_deep_vit_2_HR_"  # Your specific model name prefix
+model_path = f"saved_models/{model_name}{current_time}"
+
+torch.save(best_model, model_path)
+print("Best Model Saved")
+print("Finished Training")
 
 # Finish wandb run
 wandb.finish()

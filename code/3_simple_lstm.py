@@ -144,7 +144,7 @@ for epoch in range(num_epochs):
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_name = "LSTM_QT"  # Your specific model name prefix
+model_name = "3_LSTM_HR_"  # Your specific model name prefix
 model_path = f"saved_models/{model_name}{current_time}"
 
 torch.save(best_model, model_path)
