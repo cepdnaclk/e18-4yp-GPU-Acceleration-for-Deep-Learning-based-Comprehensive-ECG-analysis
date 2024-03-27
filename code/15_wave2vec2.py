@@ -6,6 +6,8 @@ from tqdm import tqdm
 import time
 import wandb
 import os
+import numpy as np
+import random
 from models.Wave2vec2 import Wave2Vec2
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
@@ -26,6 +28,19 @@ learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 # start a new wandb run to track this script
 wandb.init(

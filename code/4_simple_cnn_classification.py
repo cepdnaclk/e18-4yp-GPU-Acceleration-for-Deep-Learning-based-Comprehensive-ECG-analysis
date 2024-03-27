@@ -7,6 +7,8 @@ import wandb
 import os
 import utils.current_server as current_server
 import time
+import numpy as np
+import random
 
 from models.SimpleCNNClassification import SimpleCNNClassification  # Adjust the import based on your CNN model
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
@@ -19,6 +21,19 @@ batch_size = 1
 learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 # start a new wandb run to track this script
 wandb.init(
