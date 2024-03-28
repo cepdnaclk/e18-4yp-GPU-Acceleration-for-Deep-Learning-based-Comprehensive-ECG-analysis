@@ -42,7 +42,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2",
+    project="version2_classification",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,

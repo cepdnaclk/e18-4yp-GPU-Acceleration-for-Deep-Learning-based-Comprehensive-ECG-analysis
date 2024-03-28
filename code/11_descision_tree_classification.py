@@ -33,7 +33,7 @@ if torch.cuda.is_available():
 
 # start a new wandb run to track this script
 wandb.init(
-    project="version2",
+    project="version2_classification",
     config={
         "model": "DecisionTree",
         "dataset": "PTB-XL",
