@@ -91,6 +91,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
                 self.asc_files_path = path_in_ram
             else:
                 self.download_and_extract_dataset_to_ram()
+                self.asc_files_path = path_in_ram
         else:
             print("Not running in ampere. Loading data from disk")
             self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
