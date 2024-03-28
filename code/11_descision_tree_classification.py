@@ -6,6 +6,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import wandb
 import os
+import numpy as np
+import random
 import time
 import utils.current_server as current_server
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
@@ -15,6 +17,19 @@ start_time = time.time()
 
 # Hyperparameters
 test_fraction = 0.2
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 # start a new wandb run to track this script
 wandb.init(

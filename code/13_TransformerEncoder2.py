@@ -8,6 +8,8 @@ from tqdm import tqdm
 import datetime
 import wandb
 import os
+import numpy as np
+import random
 from sklearn.model_selection import train_test_split
 
 from models.TransformerEncoderModel2 import TransformerEncoderModel
@@ -26,6 +28,19 @@ num_epochs = 50
 train_fraction = 0.8
 parameter = HR_PARAMETER
 
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+
 
 # Hyperparameters
 batch_size = 32
@@ -37,6 +52,9 @@ input_size = 512
 num_layers = 4
 num_heads = 8
 dim_feedforward = 2048
+
+best_model = None
+best_validation_loss = 1000000
 
 # start a new wandb run to track this script
 wandb.init(
@@ -132,13 +150,18 @@ for epoch in range(num_epochs):
 
     print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader)*batch_size)}")
     print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader)*batch_size)}")
+    
+    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+        best_validation_loss = val_loss
+        best_model = model
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-# model_path = f"D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/saved_models/{current_time}"
-torch.save(model, model_path)
+model_name = "13_Transformer_enc_2_HR_"  # Your specific model name prefix
+model_path = f"saved_models/{model_name}{current_time}"
 
+torch.save(best_model, model_path)
+print("Best Model Saved")
 print("Finished Training")
 wandb.finish()
 

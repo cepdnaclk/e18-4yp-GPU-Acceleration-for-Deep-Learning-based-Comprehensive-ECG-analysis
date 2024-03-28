@@ -9,6 +9,7 @@ import os
 import time
 import utils.current_server as current_server
 import numpy as np
+import random
 from sklearn.metrics import roc_auc_score
 
 from models.SimpleLSTMCombined import CombinedLSTMModel
@@ -16,6 +17,19 @@ from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
 
 start_time = time.time()
 
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    
 # Load the pre-trained models
 # TODO : add the correct paths to here >>>
 model1 = torch.load("saved_models/20240316_213941")  # HR

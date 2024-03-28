@@ -6,6 +6,8 @@ from tqdm import tqdm
 import datetime
 import wandb
 import os
+import numpy as np
+import random
 import utils.current_server as current_server
 
 from models.SimpleLSTM import SimpleLSTM
@@ -22,6 +24,19 @@ learning_rate = 0.01
 num_epochs = 50  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
 parameter = HR_PARAMETER
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 best_model = None
 best_validation_loss = 1000000
@@ -129,7 +144,7 @@ for epoch in range(num_epochs):
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_name = "LSTM_QT"  # Your specific model name prefix
+model_name = "3_LSTM_HR_"  # Your specific model name prefix
 model_path = f"saved_models/{model_name}{current_time}"
 
 torch.save(best_model, model_path)
