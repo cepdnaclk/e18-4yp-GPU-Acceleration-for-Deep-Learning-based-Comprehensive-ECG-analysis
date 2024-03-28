@@ -121,8 +121,7 @@ for epoch in range(num_epochs):
 
 # Save the trained model
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_name = "10_cnn_deep_vit_2_HR_"  # Your specific model name prefix
-model_path = f"saved_models/{model_name}{current_time}"
+model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}"
 
 torch.save(best_model, model_path)
 print("Best Model Saved")
