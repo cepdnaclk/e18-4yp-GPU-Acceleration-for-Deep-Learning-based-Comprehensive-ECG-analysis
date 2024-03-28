@@ -96,36 +96,32 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
 
     def download_and_extract_dataset_to_ram(self):
-        import os
-        import shutil
-        import tarfile
-        import requests
-
         # Change the current working directory to /dev/shm
         os.chdir("/dev/shm")
 
         # Download the file
-        url = "https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977.tar.gz"
         print_with_timestamp("Downloading the dataset... This will only happen once every server restart")
-        response = requests.get(url, stream=True)
+        os.system("wget https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977.tar.gz")
         print_with_timestamp("Downloaded the dataset")
 
-        # Save the file
-        with open("filtered_all_normals_121977.tar.gz", "wb") as file:
-            print_with_timestamp("Saving the dataset...")
-            shutil.copyfileobj(response.raw, file)
-            print_with_timestamp("Saved the dataset")
-
-        # Extract the archive
-        with tarfile.open("filtered_all_normals_121977.tar.gz", "r:gz") as tar:
-            print_with_timestamp("Extracting the dataset...")
-            tar.extractall()
-            print_with_timestamp("Extracted the dataset")
+        # Extract
+        print_with_timestamp("Extracting the dataset...")
+        os.system("tar -xzf filtered_all_normals_121977.tar.gz")
+        print_with_timestamp("Extracted the dataset")
 
         # Remove the archive file
         print_with_timestamp("Removing the archive file...")
-        os.remove("filtered_all_normals_121977.tar.gz")
+        os.system("rm filtered_all_normals_121977.tar.gz")
         print_with_timestamp("Removed the archive file")
+
+        # Download csv file
+        print_with_timestamp("Downloading the csv file... This will only happen once every server restart")
+        os.system("wget https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977_ground_truth.csv")
+        print_with_timestamp("Downloaded the csv file")
+
+        # Reset the current working directory to the original directory
+        original_dir = os.getcwd()
+        os.chdir(original_dir)
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
         # files have 8 columns, each column has one lead
