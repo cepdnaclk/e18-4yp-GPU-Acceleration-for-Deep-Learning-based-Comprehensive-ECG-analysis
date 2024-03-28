@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -39,7 +40,7 @@ random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
-    
+
 best_model = None
 best_validation_loss = 1000000
 
@@ -67,9 +68,7 @@ dataset = Deepfake_ECG_Dataset(
 # Split dataset
 train_size = int(train_fraction * len(dataset))
 test_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(
-    dataset, [train_size, test_size]
-)
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 
 # Create data loaders
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -108,20 +107,22 @@ for epoch in range(num_epochs):
             val_loss += loss.item()
 
     # Log metrics
-    wandb.log({
-        "train_loss": train_loss / len(train_loader),
-        "val_loss": val_loss / len(val_loader),
-    })
+    wandb.log(
+        {
+            "train_loss": train_loss / len(train_loader),
+            "val_loss": val_loss / len(val_loader),
+        }
+    )
 
     print(f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss / len(train_loader)}, Val Loss: {val_loss / len(val_loader)}")
-    
+
     if (val_loss / (len(val_loader) * batch_size)) < best_validation_loss:
         best_validation_loss = val_loss
         best_model = model
 
 # Save the trained model
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}"
+model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}_{wandb.run.name}"
 
 torch.save(best_model, model_path)
 print("Best Model Saved")

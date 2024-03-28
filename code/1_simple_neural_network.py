@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 
 import torch
 import torch.nn as nn
@@ -44,10 +45,10 @@ random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
-    
+
 best_model = None
 best_validation_loss = 1000000
-    
+
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
@@ -143,11 +144,9 @@ for epoch in range(num_epochs):
         best_model = model
 
 
-
-
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}"
+model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}_{wandb.run.name}"
 
 torch.save(best_model, model_path)
 print("Best Model Saved")
