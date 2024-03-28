@@ -1,33 +1,31 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import time
+import datetime
 import wandb
 import os
+import time
+import utils.current_server as current_server
 import numpy as np
 import random
-import utils.current_server as current_server
+from sklearn.metrics import roc_auc_score
 
-from models.SimpleNeuralNetwork import SimpleNeuralNetwork
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
-from sklearn.model_selection import train_test_split
 
 # Record the start time
 start_time = time.time()
 
 
+from models.SimpleNeuralNetworkClassification import SimpleNeuralNetworkClassification
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+
 # Hyperparameters
-batch_size = 16
+batch_size = 32
 learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
-parameter = HR_PARAMETER
 
 # Set a fixed seed for reproducibility
 SEED = 42
@@ -41,7 +39,7 @@ random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
-    
+
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
@@ -50,26 +48,25 @@ wandb.init(
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
-        "dataset": "Deepfake_ECG_Dataset",
+        "dataset": "PTB-XL",
         "epochs": num_epochs,
-        "parameter": parameter,
+        "parameter": "classification",
     },
 )
 
+
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-# device = "cpu"
 
 # Create the model
-model = SimpleNeuralNetwork().to(device)
+model = SimpleNeuralNetworkClassification().to(device)
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset(parameter=parameter)
+dataset = ECGDataset()
 
 # Split the dataset into training and validation sets
-train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
-
-train_dataset = torch.utils.data.Subset(dataset, train_indices)
-val_dataset = torch.utils.data.Subset(dataset, val_indices)
+train_size = int(train_fraction * len(dataset))
+test_size = len(dataset) - train_size
+train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 
 # set num_workers
 if current_server.is_running_in_server():
@@ -85,13 +82,16 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-criterion = nn.L1Loss()
+criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for multi-class classification
 
 
-# Training loop
 for epoch in range(num_epochs):
     model.train()
-    train_running_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    all_outputs = []
+    all_labels = []
+
     for i, data in tqdm(
         enumerate(train_dataloader, 0),
         total=len(train_dataloader),
@@ -106,14 +106,33 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        train_running_loss += loss.item()
+        # Calculate accuracy
+        predicted = torch.argmax(outputs, 1)
+        labels_max = torch.argmax(labels, 1)
+        total_correct += (predicted == labels_max).sum().item()
+        total_samples += labels.size(0)
+
+        # Store outputs and labels for AUC-ROC calculation
+        all_outputs.extend(outputs.detach().cpu().numpy())
+        all_labels.extend(labels.cpu().numpy())
+
+    # Compute accuracy
+    train_accuracy = total_correct / total_samples
+
+    # Compute AUC-ROC
+    all_outputs = np.concatenate(all_outputs, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    train_auc_roc = roc_auc_score(all_labels, all_outputs)
 
     # Log metrics
-    print(f"Epoch: {epoch} train_loss: {train_running_loss / (len(train_dataloader)*batch_size)}")
-
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     # Validation loop
     model.eval()
-    val_running_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    all_outputs = []
+    all_labels = []
+
     with torch.no_grad():
         for i, data in tqdm(
             enumerate(val_dataloader, 0),
@@ -124,18 +143,44 @@ for epoch in range(num_epochs):
             inputs, labels = inputs.to(device), labels.to(device)
 
             outputs = model(inputs)
-            # if i == 0:
-            #     for x in range(len(outputs)):
-            #         print(f"Predicted: {outputs[x]} Real: {labels[x]}")
-            loss = criterion(outputs, labels)
 
-            val_running_loss += loss.item()
+            # Calculate accuracy
+            predicted = torch.argmax(outputs, 1)
+            labels_max = torch.argmax(labels, 1)
+            total_correct += (predicted == labels_max).sum().item()
+            total_samples += labels.size(0)
 
-        #  Log metrics
-    wandb.log({"train_loss": train_running_loss / (len(train_dataloader) * batch_size), "val_loss": val_running_loss / (len(val_dataloader) * batch_size)})
-    print(f"Epoch: {epoch} val_loss: {val_running_loss /  (len(val_dataloader)*batch_size)}")
+            # Store outputs and labels for AUC-ROC calculation
+            all_outputs.extend(outputs.detach().cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+        # Compute accuracy
+        val_accuracy = total_correct / total_samples
+
+        # Compute AUC-ROC
+        all_outputs = np.concatenate(all_outputs, axis=0)
+        all_labels = np.concatenate(all_labels, axis=0)
+        val_auc_roc = roc_auc_score(all_labels, all_outputs)
+
+        # Log metrics
+        print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+    #  Log metrics
+    wandb.log(
+        {
+            "train_accuracy": train_accuracy,
+            "train_AUC": train_auc_roc,
+            "val_accuracy": val_accuracy,
+            "val_AUC": val_auc_roc,
+        }
+    )
+
+    # # Save the trained model with date and time in the path
+    # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # model_path = f"saved_models/{current_time}"
+    # mlflow.pytorch.save_model(model, model_path)
 
 print("Finished Training")
+
 
 # Record the end time
 end_time = time.time()
