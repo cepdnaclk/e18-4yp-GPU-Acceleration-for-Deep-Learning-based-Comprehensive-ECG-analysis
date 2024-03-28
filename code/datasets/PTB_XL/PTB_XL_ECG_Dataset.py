@@ -9,7 +9,6 @@ import os
 import datetime
 import socket
 
-# This will not be used as the labels are not there.
 
 
 DEFAULT = "default"
