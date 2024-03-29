@@ -9,7 +9,7 @@ pip3 install wfdb==4.1.2
 pip3 install wandb==0.16.1
 pip3 install einops==0.7.0
 pip3 install -U scikit-learn==1.4.1.post1
-pip install snntorch
+pip3 install snntorch==0.8.1
 
 # after that 
 # 'wandb login' 
