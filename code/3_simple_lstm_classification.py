@@ -51,14 +51,14 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="8 channel separated",
+    notes="modified LSTM classification",
 )
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model
 model = SimpleLSTMClassification().to(device)
 
 # Create the dataset class
-dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
+dataset = ECGDataset()
 
 
 # Split the dataset into training and validation sets
