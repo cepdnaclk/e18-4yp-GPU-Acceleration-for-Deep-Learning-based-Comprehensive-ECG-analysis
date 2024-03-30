@@ -57,16 +57,28 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
 
-        # NOTE : Uncomment below lines and comment out the next few lines
+        # Dictionary to store loaded ASC files
+        self.loaded_asc_files = {}
+        self.asc_files_path = ""
+        self.ground_truth_lables_csv_path = "datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
+
+        path_in_ram = f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977/"
+        if hostname == "ampere":
+            print("Running in ampere server. Checking if data is available in ram")
+            self.asc_files_path = path_in_ram
+            self.ground_truth_lables_csv_path = "/dev/shm/filtered_all_normals_121977_ground_truth.csv"
+            if os.path.exists(path_in_ram):
+                print("Files found in ram. Continuing")
+            else:
+                self.download_and_extract_dataset_to_ram()
+        else:
+            print("Not running in ampere. Loading data from disk")
+            self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
 
         # load the ground truth labels
         print("loading ground truth labels")
-        self.ground_truths = pandas.read_csv("datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv")
+        self.ground_truths = pandas.read_csv(self.ground_truth_lables_csv_path)
         print("loaded ground truth labels")
-
-        # self.ground_truths = pandas.read_csv(
-        #     "D:/SEM_07/FYP/e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis/code/datasets/deepfake_ecg/filtered_all_normals_121977_ground_truth.csv"
-        # )
 
         if parameter == HR_PARAMETER:
             parameter = torch.tensor(self.ground_truths["avgrrinterval"].values, dtype=torch.float32)
@@ -78,23 +90,6 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             self.parameter = torch.tensor(self.ground_truths["pr"].values, dtype=torch.float32)
         elif parameter == QT_PARAMETER:
             self.parameter = torch.tensor(self.ground_truths["qt"].values, dtype=torch.float32)
-
-        # Dictionary to store loaded ASC files
-        self.loaded_asc_files = {}
-        self.asc_files_path = ""
-
-        path_in_ram = f"/dev/shm/from_006_chck_2500_150k_filtered_all_normals_121977/"
-        if hostname == "ampere":
-            print("Running in ampere server. Checking if data is available in ram")
-            if os.path.exists(path_in_ram):
-                print("Files found in ram. Continuing")
-                self.asc_files_path = path_in_ram
-            else:
-                self.download_and_extract_dataset_to_ram()
-                self.asc_files_path = path_in_ram
-        else:
-            print("Not running in ampere. Loading data from disk")
-            self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
 
     def download_and_extract_dataset_to_ram(self):
         # Change the current working directory to /dev/shm
