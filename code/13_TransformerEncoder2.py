@@ -23,10 +23,10 @@ import utils.current_server as current_server
 
 
 # Hyperparameters
-batch_size = 32
-learning_rate = 0.0001
-num_epochs = 50
-train_fraction = 0.8
+# batch_size = 32
+# learning_rate = 0.01
+# num_epochs = 50
+# train_fraction = 0.8
 parameter = HR_PARAMETER
 
 # Set a fixed seed for reproducibility
@@ -45,7 +45,7 @@ if torch.cuda.is_available():
 
 # Hyperparameters
 batch_size = 32
-# learning_rate = 0.001
+learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 patch_size = 500

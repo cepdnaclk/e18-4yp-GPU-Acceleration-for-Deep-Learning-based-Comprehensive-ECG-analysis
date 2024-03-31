@@ -23,10 +23,10 @@ import utils.current_server as current_server
 
 
 # Hyperparameters
-batch_size = 1
-learning_rate = 0.001
-num_epochs = 1000
-train_fraction = 0.8
+# batch_size = 1
+# learning_rate = 0.01
+# num_epochs = 50
+# train_fraction = 0.8
 parameter = HR_PARAMETER
 
 # Set a fixed seed for reproducibility
@@ -52,7 +52,7 @@ best_validation_loss = 1000000
 
 # Hyperparameters
 batch_size = 32
-learning_rate = 0.001
+learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 patch_size = 500
