@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -11,6 +12,8 @@ import utils.current_server as current_server
 import numpy as np
 import random
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+
 
 # Record the start time
 start_time = time.time()
@@ -62,9 +65,10 @@ dataset = ECGDataset()
 
 
 # Split the dataset into training and validation sets
-train_size = int(train_fraction * len(dataset))
-test_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+
+train_dataset = torch.utils.data.Subset(dataset, train_indices)
+val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
