@@ -8,7 +8,7 @@ from scipy import signal as scipysignal
 import os
 import datetime
 import socket
-
+import utils.datasets as utils_datasets
 
 DEFAULT = "default"
 INPUT_CHANNEL_8 = "input_channel_8"
@@ -42,7 +42,7 @@ class ECGDataset(Dataset):
                 print("Files found in ram. Continuing")
             else:
                 print("Files not found in ram. Downloading now")
-                self.download_and_extract_dataset_to_ram()
+                utils_datasets.download_and_extract_ptb_xl_dataset_to_ram()
         else:
             print("Not running in ampere. Loading data from disk")
             self.path = path
@@ -67,29 +67,6 @@ class ECGDataset(Dataset):
 
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
-
-    def download_and_extract_dataset_to_ram(self):
-        # Change the current working directory to /dev/shm
-        os.chdir("/dev/shm")
-
-        # Download the file
-        print_with_timestamp("Downloading the dataset... This will only happen once every server restart")
-        os.system("wget https://physionet.org/static/published-projects/ptb-xl/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3.zip")
-        print_with_timestamp("Downloaded the dataset")
-
-        # Extract
-        print_with_timestamp("Extracting the dataset...")
-        os.system("unzip ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3.zip")
-        print_with_timestamp("Extracted the dataset")
-
-        # Remove the archive file
-        print_with_timestamp("Removing the archive file...")
-        os.system("rm ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3.zip")
-        print_with_timestamp("Removed the archive file")
-
-        # Reset the current working directory to the original directory
-        original_dir = os.getcwd()
-        os.chdir(original_dir)
 
     def __len__(self):
         #  return 1000

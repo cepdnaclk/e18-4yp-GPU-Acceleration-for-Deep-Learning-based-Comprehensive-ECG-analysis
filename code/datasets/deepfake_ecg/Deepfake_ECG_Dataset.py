@@ -11,6 +11,7 @@ import os
 import socket
 import utils.current_server as current_server
 from datetime import datetime
+import utils.datasets as utils_datasets
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -70,7 +71,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             if os.path.exists(path_in_ram):
                 print("Files found in ram. Continuing")
             else:
-                self.download_and_extract_dataset_to_ram()
+                utils_datasets.download_and_extract_deepfake_dataset_to_ram()
         else:
             print("Not running in ampere. Loading data from disk")
             self.asc_files_path = "datasets/deepfake_ecg/from_006_chck_2500_150k_filtered_all_normals_121977/"
@@ -90,34 +91,6 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             self.parameter = torch.tensor(self.ground_truths["pr"].values, dtype=torch.float32)
         elif parameter == QT_PARAMETER:
             self.parameter = torch.tensor(self.ground_truths["qt"].values, dtype=torch.float32)
-
-    def download_and_extract_dataset_to_ram(self):
-        # Change the current working directory to /dev/shm
-        os.chdir("/dev/shm")
-
-        # Download the file
-        print_with_timestamp("Downloading the dataset... This will only happen once every server restart")
-        os.system("wget https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977.tar.gz")
-        print_with_timestamp("Downloaded the dataset")
-
-        # Extract
-        print_with_timestamp("Extracting the dataset...")
-        os.system("tar -xzf filtered_all_normals_121977.tar.gz")
-        print_with_timestamp("Extracted the dataset")
-
-        # Remove the archive file
-        print_with_timestamp("Removing the archive file...")
-        os.system("rm filtered_all_normals_121977.tar.gz")
-        print_with_timestamp("Removed the archive file")
-
-        # Download csv file
-        print_with_timestamp("Downloading the csv file... This will only happen once every server restart")
-        os.system("wget https://files.osf.io/v1/resources/6hved/providers/dropbox/filtered_all_normals_121977_ground_truth.csv")
-        print_with_timestamp("Downloaded the csv file")
-
-        # Reset the current working directory to the original directory
-        original_dir = os.getcwd()
-        os.chdir(original_dir)
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
         # files have 8 columns, each column has one lead
