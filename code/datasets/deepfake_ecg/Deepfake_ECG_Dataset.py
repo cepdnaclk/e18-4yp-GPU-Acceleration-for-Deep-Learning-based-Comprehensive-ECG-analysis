@@ -108,7 +108,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
 
     def convert_to_DEFAULT_OUTPUT_TYPE(self, ecg_signals):
         ecg_signals = self.connect_ecgs_one_after_the_other(ecg_signals)
-        ecg_signals = (ecg_signals + 3929.0) / 7642  # normalization : Range (0-1)
+        ecg_signals = (ecg_signals + 3713.0) / 7642  # normalization : Range (0-1)
 
         # Transposing the ECG signals
         ecg_signals = ecg_signals.t()
