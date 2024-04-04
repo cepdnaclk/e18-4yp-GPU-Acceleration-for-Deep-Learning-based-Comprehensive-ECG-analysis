@@ -25,3 +25,5 @@ def get_latest_update_by():
     return "Not found"
 
 
+if __name__ == "__main__":
+    print(get_latest_update_by())
