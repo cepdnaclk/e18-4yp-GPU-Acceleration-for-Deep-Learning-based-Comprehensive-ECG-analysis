@@ -3,30 +3,25 @@ from .current_server import is_running_in_server
 
 
 def get_latest_update_by():
-
     if not is_running_in_server():
         return "--Not running in servers--"
 
-    # Run the "ls" command and capture its output
-    process = subprocess.run(["ls", "-al"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-
-    # Get the output as a string
+    # Run the "ls -alt" command and capture its output
+    process = subprocess.run(["ls", "-alt"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output_str = process.stdout
 
-    # Count the occurrences of "e18098", "e18100", and "e18155" in the output string
-    countIshan = output_str.count("e18098")
-    countAdeepa = output_str.count("e18100")
-    countRidma = output_str.count("e18155")
+    # Split the output into lines
+    lines = output_str.strip().split("\n")
 
-    # Find the maximum count and its corresponding variable name
-    max_count = max(countIshan, countAdeepa, countRidma)
-    max_variable = None
+    # Exclude the first line (summary) and the last line (current directory)
+    lines = lines[2]
 
-    if max_count == countIshan:
-        max_variable = "Ishan"
-    elif max_count == countAdeepa:
-        max_variable = "Adeepa"
-    elif max_count == countRidma:
-        max_variable = "Ridma"
+    # Loop through the lines and extract the username from the latest updated files
+    parts = lines.split()
+    username = parts[2]
+    if username.startswith("e18"):
+        return username
 
-    return max_variable
+    return "Not found"
+
+
