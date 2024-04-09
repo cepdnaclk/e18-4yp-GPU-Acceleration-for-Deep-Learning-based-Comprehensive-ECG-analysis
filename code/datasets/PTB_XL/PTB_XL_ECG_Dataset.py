@@ -74,9 +74,9 @@ class ECGDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.no_of_input_channels == DEFAULT:
-            x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
+            x = torch.Tensor(self.X[idx].flatten())
         elif self.no_of_input_channels == INPUT_CHANNEL_8:
-            x = torch.Tensor(self.X[idx])  # sent as 5000,8
+            x = torch.Tensor(self.X[idx]).transpose(0, 1)  # Transpose the tensor to (8, 5000)
         y = self.Y["diagnostic_superclass"].iloc[idx][0]
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
