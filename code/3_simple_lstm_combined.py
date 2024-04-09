@@ -14,6 +14,7 @@ from sklearn.metrics import roc_auc_score
 
 from models.SimpleLSTMCombined import CombinedLSTMModel
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import INPUT_CHANNEL_8
 
 start_time = time.time()
 
@@ -91,7 +92,7 @@ model = CombinedLSTMModel(model1, model2, model3, model4, num_classes=5)
 model = model.to(device)
 
 # Create the dataset class
-dataset = ECGDataset()
+dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))
