@@ -1,11 +1,14 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 import datetime
 import wandb
 import os
+import numpy as np
+import random
 import utils.current_server as current_server
 from sklearn.model_selection import train_test_split
 
@@ -18,6 +21,19 @@ learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 parameter = deepfake_dataset.HR_PARAMETER
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 # start a new wandb run to track this script
 wandb.init(
@@ -33,7 +49,7 @@ wandb.init(
     },
 )
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = SimpleLSTM(input_size=22962).to(device)

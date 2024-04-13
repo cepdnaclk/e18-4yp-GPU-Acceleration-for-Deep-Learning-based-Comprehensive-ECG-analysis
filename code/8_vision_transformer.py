@@ -1,11 +1,14 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 import datetime
 import wandb
 import os
+import numpy as np
+import random
 import utils.current_server as current_server
 import utils.gpu as gpu
 from sklearn.model_selection import train_test_split
@@ -20,6 +23,22 @@ learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 parameter = deepfake_ecg_dataset.HR_PARAMETER
+
+best_model = None
+best_validation_loss = 1000000
+
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
 # start a new wandb run to track this script
 wandb.init(
@@ -37,7 +56,7 @@ wandb.init(
 )
 
 
-device = gpu.get_device_with_lowest_vram()
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 # for more information on how to use the class. Read the source code
@@ -51,7 +70,12 @@ dataset = deepfake_ecg_dataset.Deepfake_ECG_Dataset(
 )
 
 # Split the dataset into training and validation sets
-train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+train_indices, val_indices = train_test_split(
+    range(len(dataset)),
+    test_size=1 - train_fraction,
+    random_state=42,
+    shuffle=True,
+)
 
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
 val_dataset = torch.utils.data.Subset(dataset, val_indices)
@@ -59,15 +83,29 @@ val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
-    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
+    print(
+        f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4"
+    )
     num_workers = 4
 else:
-    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
+    print(
+        f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0"
+    )
     num_workers = 0
 
 # Create data loaders for training and validation
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+train_dataloader = torch.utils.data.DataLoader(
+    train_dataset,
+    batch_size=batch_size,
+    shuffle=True,
+    num_workers=num_workers,
+)
+val_dataloader = torch.utils.data.DataLoader(
+    val_dataset,
+    batch_size=batch_size,
+    shuffle=False,
+    num_workers=num_workers,
+)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -113,19 +151,30 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / (len(train_dataloader) * batch_size),
+            "train_loss": train_loss
+            / (len(train_dataloader) * batch_size),
             "val_loss": val_loss / (len(val_dataloader) * batch_size),
         }
     )
 
-    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
+    print(
+        f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}"
+    )
+    print(
+        f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}"
+    )
+    
+    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+        best_validation_loss = val_loss
+        best_model = model
 
 # Save the trained model with date and time in the path
+# Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-torch.save(model, model_path)
+model_path = f"saved_models/{os.path.basename(__file__)}_{parameter}_{current_time}_{wandb.run.name}"
 
+torch.save(best_model, model_path)
+print("Best Model Saved")
 print("Finished Training")
 wandb.finish()
 

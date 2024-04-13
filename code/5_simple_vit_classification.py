@@ -6,6 +6,10 @@ from tqdm import tqdm
 import datetime
 import wandb
 import os
+import numpy as np
+import random
+from sklearn.model_selection import train_test_split
+
 
 from models.SimpleViTClassification import SimpleViTClassification
 import utils.current_server as current_server
@@ -19,10 +23,23 @@ learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+
 # start a new wandb run to track this script
 # start a new wandb run to track this script
 wandb.init(
-    project="version2",
+    project="version2_classification",
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
@@ -40,9 +57,10 @@ model = SimpleViTClassification(input_size=40000, num_classes=5).to(device)
 dataset = ECGDataset()
 
 # Split the dataset into training and validation sets
-train_size = int(train_fraction * len(dataset))
-test_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
+train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+
+train_dataset = torch.utils.data.Subset(dataset, train_indices)
+val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():

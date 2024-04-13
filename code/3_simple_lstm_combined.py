@@ -9,19 +9,48 @@ import os
 import time
 import utils.current_server as current_server
 import numpy as np
+import random
 from sklearn.metrics import roc_auc_score
 
 from models.SimpleLSTMCombined import CombinedLSTMModel
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import INPUT_CHANNEL_8
 
 start_time = time.time()
 
+# Set a fixed seed for reproducibility
+SEED = 42
+
+# Set the seed for CPU
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# Set the seed for CUDA (GPU)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    
 # Load the pre-trained models
 # TODO : add the correct paths to here >>>
-model1 = torch.load("saved_models/20240316_213941")  # HR
-model2 = torch.load("saved_models/20240316_214905")  # QRS
-model3 = torch.load("saved_models/20240316_213941")  # HR
-model4 = torch.load("saved_models/20240316_214905")  # QRS
+# Load the pre-trained models with correct device mapping
+model1 = torch.load("saved_models/3_simple_lstm.py_hr_20240407_020439_ensign-manoeuvre-175")  # HR
+model2 = torch.load("saved_models/3_simple_lstm.py_qrs_20240408_161203_super-sun-183")  # QRS
+model3 = torch.load("saved_models/3_simple_lstm.py_pr_20240408_210313_fresh-surf-185")  # PR
+model4 = torch.load("saved_models/3_simple_lstm.py_qt_20240408_210752_honest-energy-186")  # QT
+
+# Freeze the parameters of the pre-trained models
+for param in model1.parameters():
+    param.requires_grad = False
+
+for param in model2.parameters():
+    param.requires_grad = False
+
+for param in model3.parameters():
+    param.requires_grad = False
+
+for param in model4.parameters():
+    param.requires_grad = False
 
 # Remove the last layer (MLP) from each model
 model1.lstm.flatten_parameters()
@@ -38,7 +67,7 @@ model4.MLP = torch.nn.Sequential(*list(model4.MLP.children())[:-2])
 
 # Hyperparameters
 batch_size = 32
-learning_rate = 0.001
+learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 
@@ -54,16 +83,16 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="transfer learning test3 LSTM",
+    notes="LSTM transfer learning classification freezed",
 )
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = CombinedLSTMModel(model1, model2, model3, model4, num_classes=5)
 model = model.to(device)
 
 # Create the dataset class
-dataset = ECGDataset()
+dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
 
 # Split the dataset into training and validation sets
 train_size = int(train_fraction * len(dataset))

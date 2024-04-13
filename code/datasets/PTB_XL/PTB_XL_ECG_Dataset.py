@@ -5,12 +5,17 @@ import ast
 import wfdb
 import numpy as np
 from scipy import signal as scipysignal
-
-# This will not be used as the labels are not there.
-
+import os
+import datetime
+import socket
+import utils.datasets as utils_datasets
 
 DEFAULT = "default"
 INPUT_CHANNEL_8 = "input_channel_8"
+
+
+# decide to run the full dataset or no based on the server or local machine
+hostname = socket.gethostname()
 
 
 def signal_lowpass_filter(signal, sampling_rate, cutoff_freq=30, order=4):
@@ -29,8 +34,21 @@ class ECGDataset(Dataset):
         self.sampling_rate = sampling_rate
         self.no_of_input_channels = no_of_input_channels
 
+        path_in_ram = f"/dev/shm/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
+        if hostname == "ampere":
+            print("Running in ampere server. Checking if data is available in ram")
+            self.path = path_in_ram
+            if os.path.exists(path_in_ram):
+                print("Files found in ram. Continuing")
+            else:
+                print("Files not found in ram. Downloading now")
+                utils_datasets.download_and_extract_ptb_xl_dataset_to_ram()
+        else:
+            print("Not running in ampere. Loading data from disk")
+            self.path = path
+
         # Load and convert annotation data
-        self.Y = pd.read_csv(path + "ptbxl_database.csv", index_col="ecg_id")
+        self.Y = pd.read_csv(self.path + "ptbxl_database.csv", index_col="ecg_id")
         self.Y.scp_codes = self.Y.scp_codes.apply(lambda x: ast.literal_eval(x))
 
         # Load raw signal data
@@ -56,9 +74,9 @@ class ECGDataset(Dataset):
 
     def __getitem__(self, idx):
         if self.no_of_input_channels == DEFAULT:
-            x = torch.Tensor(self.X[idx].flatten())  # Assuming X is a NumPy array
+            x = torch.Tensor(self.X[idx].flatten())
         elif self.no_of_input_channels == INPUT_CHANNEL_8:
-            x = torch.Tensor(self.X[idx])  # sent as 5000,8
+            x = torch.Tensor(self.X[idx]).transpose(0, 1)  # Transpose the tensor to (8, 5000)
         y = self.Y["diagnostic_superclass"].iloc[idx][0]
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
@@ -92,6 +110,22 @@ class ECGDataset(Dataset):
             if key in self.agg_df.index:
                 tmp.append(self.agg_df.loc[key].diagnostic_class)
         return list(set(tmp))
+
+
+# Function to print with timestamp and time difference
+def print_with_timestamp(message):
+    global last_print_time
+    current_time = datetime.now()
+    if "last_print_time" not in globals():
+        time_diff = None
+    else:
+        time_diff = (current_time - last_print_time).total_seconds()
+    timestamp = current_time.strftime("[%Y-%m-%d %H:%M:%S]")
+    if time_diff is not None:
+        print(f"{timestamp} (Time Taken: {time_diff:.2f} seconds) {message}")
+    else:
+        print(f"{timestamp} {message}")
+    last_print_time = current_time
 
 
 # Example usage: if the path is different and the sampling rate different
