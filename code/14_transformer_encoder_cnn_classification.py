@@ -14,6 +14,7 @@ import random
 from models.TrasnformerEncoderCnnModel import TrasnformerEncoderCnnModel
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
 
 
 # Record the start time
@@ -83,12 +84,14 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-criterion = nn.BCEWithLogitsLoss()
+criterion = nn.CrossEntropyLoss()
 
 for epoch in range(num_epochs):
     model.train()
     total_correct = 0
     total_samples = 0
+    all_outputs = []
+    all_labels = []
     for i, data in tqdm(
         enumerate(train_dataloader, 0),
         total=len(train_dataloader),
@@ -108,15 +111,25 @@ for epoch in range(num_epochs):
         labels_max = torch.argmax(labels, 1)
         total_correct += (predicted == labels_max).sum().item()
         total_samples += labels.size(0)
+        
+        all_outputs.extend(outputs.detach().cpu().numpy())
+        all_labels.extend(labels.cpu().numpy())
 
     # Compute accuracy
     train_accuracy = total_correct / total_samples
-    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
+    # Compute AUC-ROC
+    all_outputs = np.concatenate(all_outputs, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    train_auc_roc = roc_auc_score(all_labels, all_outputs)
+    
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
 
     # Validation loop
     model.eval()
     total_correct = 0
     total_samples = 0
+    all_outputs = []
+    all_labels = []
     with torch.no_grad():
         for i, data in tqdm(
             enumerate(val_dataloader, 0),
@@ -133,20 +146,32 @@ for epoch in range(num_epochs):
             labels_max = torch.argmax(labels, 1)
             total_correct += (predicted == labels_max).sum().item()
             total_samples += labels.size(0)
-
-    # Compute accuracy
-    val_accuracy = total_correct / total_samples
-    print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, total_correct: {total_correct}, total_samples: {total_samples}")
-
-    # Log metrics
+            
+             # Store outputs and labels for AUC-ROC calculation
+            all_outputs.extend(outputs.detach().cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+            
+        # Compute accuracy
+        val_accuracy = total_correct / total_samples
+        # Compute AUC-ROC
+        all_outputs = np.concatenate(all_outputs, axis=0)
+        all_labels = np.concatenate(all_labels, axis=0)
+        val_auc_roc = roc_auc_score(all_labels, all_outputs)
+        
+        # Log metrics
+        print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+        
     wandb.log(
         {
             "train_accuracy": train_accuracy,
+            "train_AUC": train_auc_roc,
             "val_accuracy": val_accuracy,
+            "val_AUC": val_auc_roc,
         }
     )
 
 print("Finished Training")
+wandb.finish()
 
 # Record the end time
 end_time = time.time()
