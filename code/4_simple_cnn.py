@@ -132,15 +132,15 @@ for epoch in range(num_epochs):
     #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / (len(train_dataloader) * batch_size),
-            "val_loss": val_loss / (len(val_dataloader) * batch_size),
+            "train_loss": train_loss / (len(train_dataloader) ),
+            "val_loss": val_loss / (len(val_dataloader) ),
         }
     )
 
-    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader))}")
+    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader))}")
 
-    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+    if (val_loss / (len(val_dataloader))) < best_validation_loss:
         best_validation_loss = val_loss
         best_model = model
 
@@ -155,6 +155,6 @@ wandb.finish()
 
 # create a backup of mlruns in babbage server
 # "Turing is not stable, data could be lost" - Akila E17
-import os
+# import os
 
-os.system("cp -r mlruns ~/4yp/")
+# os.system("cp -r mlruns ~/4yp/")

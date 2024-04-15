@@ -136,10 +136,10 @@ for epoch in range(num_epochs):
 
             val_running_loss += loss.item()
 
-    print(f"Epoch: {epoch} val_loss: {val_running_loss / (len(val_dataloader) * batch_size)}")
+    print(f"Epoch: {epoch} val_loss: {val_running_loss / (len(val_dataloader) )}")
     #  Log metrics
-    wandb.log({"train_loss": train_running_loss / (len(train_dataloader) * batch_size), "val_loss": val_running_loss / (len(val_dataloader) * batch_size)})
-    if (val_running_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+    wandb.log({"train_loss": train_running_loss / (len(train_dataloader) ), "val_loss": val_running_loss / (len(val_dataloader) )})
+    if (val_running_loss / (len(val_dataloader) )) < best_validation_loss:
         best_validation_loss = val_running_loss
         best_model = model
 
