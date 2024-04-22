@@ -201,7 +201,7 @@ for epoch in range(num_epochs):
     print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader))}")
 
     if (val_loss / (len(val_dataloader))) < best_validation_loss:
-        best_validation_loss = val_loss
+        best_validation_loss = val_loss/(len(val_dataloader))
         best_model = model
         early_stopping_counter = 0
     else :

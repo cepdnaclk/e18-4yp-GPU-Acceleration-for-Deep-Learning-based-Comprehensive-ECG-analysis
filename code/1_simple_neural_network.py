@@ -195,6 +195,10 @@ for epoch in range(num_epochs):
     )
     print(f"Epoch: {epoch} train_loss: {train_running_loss / (len(train_dataloader))}")
     print(f"Epoch: {epoch} val_loss: {val_running_loss / (len(val_dataloader))}")
+    
+    if (val_running_loss / (len(val_dataloader) )) < best_validation_loss:
+        best_validation_loss = val_running_loss/(len(val_dataloader))
+        best_model = model
 
 
 # Save the trained model with date and time in the path
