@@ -28,9 +28,12 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 50  # used to be 1000 : HR was best around 500 ep
+num_epochs = 1000  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
 parameter = HR_PARAMETER
+
+patience = 30
+early_stopping_counter = 0
 
 # Set a fixed seed for reproducibility
 SEED = 42
@@ -60,7 +63,7 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": parameter,
     },
-    notes="cosine ane. 0.01--6,Tmax20,ep50",
+    notes="early stop+patience30+T_max20",
 )
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -200,6 +203,14 @@ for epoch in range(num_epochs):
     if (val_loss / (len(val_dataloader))) < best_validation_loss:
         best_validation_loss = val_loss
         best_model = model
+        early_stopping_counter = 0
+    else :
+        early_stopping_counter += 1
+        
+    # Check if early stopping criteria is met
+    if early_stopping_counter >= patience:
+        print(f"********Early stopping at epoch {epoch}**********")
+        break
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
