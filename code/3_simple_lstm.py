@@ -23,13 +23,14 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import CH_8_2D_MATRIX_OUTPUT_TYPE
 
 from sklearn.model_selection import train_test_split
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
 num_epochs = 50  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
-parameter = QRS_PARAMETER
+parameter = HR_PARAMETER
 
 # Set a fixed seed for reproducibility
 SEED = 42
@@ -59,10 +60,10 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": parameter,
     },
-    notes="NOT NORMALIZED : QRS :LSTM input size 5000",
+    notes="cosine ane. 0.01--6,Tmax20,ep50",
 )
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = SimpleLSTM().to(device)
@@ -91,6 +92,8 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
+
+scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-6)
 
 
 # Training loop
@@ -154,7 +157,9 @@ for epoch in range(num_epochs):
 
 
         train_loss += loss.item()
-
+    # Update learning rate
+    scheduler.step()
+    
     # Validation loop
     model.eval()
     val_loss = 0.0
@@ -184,8 +189,8 @@ for epoch in range(num_epochs):
         {
             "train_loss": train_loss / (len(train_dataloader) ),
             "val_loss": val_loss / (len(val_dataloader) ),
-            "is_constant" :int(training_constant_yes),
             "constant_percentage" : number_of_constent_percentage,
+            "lr___" : scheduler.get_last_lr()[0],
         }
     )
 
@@ -204,9 +209,3 @@ torch.save(best_model, model_path)
 print("Best Model Saved")
 print("Finished Training")
 wandb.finish()
-
-# create a backup of mlruns in babbage server
-# "Turing is not stable, data could be lost" - Akila E17
-# import os
-
-# os.system("cp -r mlruns ~/4yp/")
