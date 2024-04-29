@@ -2,7 +2,7 @@ import utils.others as others
 
 print(f"Last updated by: ", others.get_latest_update_by())
 # Code 2: Running the Transformer Model (Modified)
-
+logging_enabled = True
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -125,6 +125,16 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         train_loss += loss.item()
+
+        if logging_enabled:
+            try:
+                print("label      |     output")
+                for round in range(batch_size):
+                    print(labels[round], "  |  ", outputs[round])
+                print()
+            except Exception as e:
+                # Print the error message
+                print("An error occurred at print label and output:", e)
 
     # Validation loop
     model.eval()
