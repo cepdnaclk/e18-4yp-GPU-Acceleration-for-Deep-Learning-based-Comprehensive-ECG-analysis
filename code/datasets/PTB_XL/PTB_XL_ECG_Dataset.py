@@ -9,6 +9,7 @@ import os
 import datetime
 import socket
 import utils.datasets as utils_datasets
+from tqdm import tqdm
 
 DEFAULT = "default"
 INPUT_CHANNEL_8 = "input_channel_8"
@@ -83,9 +84,9 @@ class ECGDataset(Dataset):
 
     def load_raw_data(self):
         if self.sampling_rate == 100:
-            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in self.Y.filename_lr]
+            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in tqdm(self.Y.filename_lr)]
         else:
-            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in self.Y.filename_hr]
+            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in tqdm(self.Y.filename_hr)]
 
         data = np.array([signal for signal, _ in data])  # here _ is metadata : leftout
 

@@ -1,6 +1,8 @@
 import utils.others as others
 
 print(f"Last updated by: ", others.get_latest_update_by())
+logging_enabled = False
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -91,6 +93,10 @@ criterion = nn.L1Loss()
 
 # Training loop
 for epoch in range(num_epochs):
+    training_constant_yes = 0
+    number_of_constents_per_epoch = 0
+    number_of_not_constents_per_epoch = 0
+    number_of_constent_percentage = 0
     model.train()
     train_loss = 0.0
     for i, data in tqdm(
@@ -106,6 +112,44 @@ for epoch in range(num_epochs):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
+        
+        if(logging_enabled):
+            try:
+                print("label      |     output")
+                for round in range(batch_size):
+                    print(labels[round],"  |  ",outputs[round])
+                print()
+            except Exception as e:
+                # Print the error message
+                print("An error occurred at print label and output:", e)
+
+        try:
+            # Take the absolute value of the outputs
+            abs_outputs = torch.abs(outputs)
+
+            # Round up each element to the nearest integer
+            rounded_outputs = torch.ceil(abs_outputs)
+
+            # Convert to type Long
+            rounded_outputs = rounded_outputs.long()
+            flattened_rounded_outputs = rounded_outputs.view(-1)
+
+            # Count the occurrences of the most common element
+            most_common_count = flattened_rounded_outputs.bincount().max()
+
+            # Check if 25 elements out of 32 are the same
+            training_constant_yes = most_common_count >= batch_size-7
+            if(training_constant_yes):
+                number_of_constents_per_epoch+=1
+            else:
+                number_of_not_constents_per_epoch+=1
+
+            if(logging_enabled):
+                print("same yes no",training_constant_yes)
+                print()
+        except Exception as e:
+            # Print the error message
+            print("An error occurred at const number calc:", e)
 
         train_loss += loss.item()
 
@@ -128,20 +172,25 @@ for epoch in range(num_epochs):
             loss = criterion(outputs, labels)
 
             val_loss += loss.item()
+    try:
+        number_of_constent_percentage = (number_of_constents_per_epoch/(number_of_constents_per_epoch+number_of_not_constents_per_epoch))*100
+    except Exception as e:
+        # Print the error message here divide by zero error occured
+        print("An error occurred at const percentage calc:", e) 
 
-    #  Log metrics
     wandb.log(
         {
-            "train_loss": train_loss / (len(train_dataloader) * batch_size),
-            "val_loss": val_loss / (len(val_dataloader) * batch_size),
+            "train_loss": train_loss / (len(train_dataloader) ),
+            "val_loss": val_loss / (len(val_dataloader) ),
+            "is_constant" :int(training_constant_yes),
+            "constant_percentage" : number_of_constent_percentage,
         }
     )
+    print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader))}")
+    print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader))}")
 
-    print(f"Epoch: {epoch} train_loss: {train_loss /  (len(train_dataloader)*batch_size)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss /  (len(val_dataloader)*batch_size)}")
-
-    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
-        best_validation_loss = val_loss
+    if (val_loss / (len(val_dataloader))) < best_validation_loss:
+        best_validation_loss = val_loss/(len(val_dataloader))
         best_model = model
 
 # Save the trained model with date and time in the path
@@ -155,6 +204,6 @@ wandb.finish()
 
 # create a backup of mlruns in babbage server
 # "Turing is not stable, data could be lost" - Akila E17
-import os
+# import os
 
-os.system("cp -r mlruns ~/4yp/")
+# os.system("cp -r mlruns ~/4yp/")

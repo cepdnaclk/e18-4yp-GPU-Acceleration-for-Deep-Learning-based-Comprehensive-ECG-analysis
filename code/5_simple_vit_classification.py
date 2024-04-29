@@ -9,6 +9,7 @@ import os
 import numpy as np
 import random
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
 
 
 from models.SimpleViTClassification import SimpleViTClassification
@@ -48,7 +49,7 @@ wandb.init(
         "parameter": "classification",
     },
 )
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Device : ", device)
 # Create the model
 model = SimpleViTClassification(input_size=40000, num_classes=5).to(device)
@@ -76,12 +77,15 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-criterion = nn.L1Loss()
+criterion = nn.CrossEntropyLoss()
 
 # Training loop
 for epoch in range(num_epochs):
     model.train()
-    train_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    all_outputs = []
+    all_labels = []
     for i, data in tqdm(
         enumerate(train_dataloader, 0),
         total=len(train_dataloader),
@@ -97,11 +101,30 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        train_loss += loss.item()
+        # Calculate accuracy
+        predicted = torch.argmax(outputs, 1)
+        labels_max = torch.argmax(labels, 1)
+        total_correct += (predicted == labels_max).sum().item()
+        total_samples += labels.size(0)
+        
+        all_outputs.extend(outputs.detach().cpu().numpy())
+        all_labels.extend(labels.cpu().numpy())
+    
+    # Compute accuracy
+    train_accuracy = total_correct / total_samples
+    # Compute AUC-ROC
+    all_outputs = np.concatenate(all_outputs, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    train_auc_roc = roc_auc_score(all_labels, all_outputs)
+    
+    print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
 
     # Validation loop
     model.eval()
-    val_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    all_outputs = []
+    all_labels = []
     with torch.no_grad():
         for i, data in tqdm(
             enumerate(val_dataloader, 0),
@@ -112,25 +135,35 @@ for epoch in range(num_epochs):
             inputs, labels = inputs.to(device), labels.to(device)
             mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
             outputs = model(inputs, mask)
-            loss = criterion(outputs, labels)
-
-            val_loss += loss.item()
-
-    # Log metrics
-    wandb.log(
+            
+            # Calculate accuracy
+            predicted = torch.argmax(outputs, 1)
+            labels_max = torch.argmax(labels, 1)
+            total_correct += (predicted == labels_max).sum().item()
+            total_samples += labels.size(0)
+            
+            # Store outputs and labels for AUC-ROC calculation
+            all_outputs.extend(outputs.detach().cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+            
+        # Compute accuracy
+        val_accuracy = total_correct / total_samples
+        # Compute AUC-ROC
+        all_outputs = np.concatenate(all_outputs, axis=0)
+        all_labels = np.concatenate(all_labels, axis=0)
+        val_auc_roc = roc_auc_score(all_labels, all_outputs)
+        
+        # Log metrics
+        print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+        
+        wandb.log(
         {
-            "train_loss": train_loss / len(train_dataloader),
-            "val_loss": val_loss / len(val_dataloader),
+            "train_accuracy": train_accuracy,
+            "train_AUC": train_auc_roc,
+            "val_accuracy": val_accuracy,
+            "val_AUC": val_auc_roc,
         }
     )
-
-    print(f"Epoch: {epoch} train_loss: {train_loss / len(train_dataloader)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss / len(val_dataloader)}")
-
-# Save the trained model with date and time in the path
-current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = f"saved_models/{current_time}"
-torch.save(model, model_path)
 
 print("Finished Training")
 wandb.finish()

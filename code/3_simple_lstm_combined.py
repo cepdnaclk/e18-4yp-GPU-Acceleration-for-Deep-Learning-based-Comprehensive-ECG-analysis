@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -13,6 +14,7 @@ import random
 from sklearn.metrics import roc_auc_score
 
 from models.SimpleLSTMCombined import CombinedLSTMModel
+from models.SimpleLSTM import SimpleLSTM
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import INPUT_CHANNEL_8
 
@@ -30,27 +32,34 @@ random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
     torch.cuda.manual_seed_all(SEED)
-    
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # Load the pre-trained models
 # TODO : add the correct paths to here >>>
 # Load the pre-trained models with correct device mapping
-model1 = torch.load("saved_models/3_simple_lstm.py_hr_20240407_020439_ensign-manoeuvre-175")  # HR
-model2 = torch.load("saved_models/3_simple_lstm.py_qrs_20240408_161203_super-sun-183")  # QRS
-model3 = torch.load("saved_models/3_simple_lstm.py_pr_20240408_210313_fresh-surf-185")  # PR
-model4 = torch.load("saved_models/3_simple_lstm.py_qt_20240408_210752_honest-energy-186")  # QT
+model1 = torch.load("saved_models_ridma/3_simple_lstm.py_hr_20240407_020439_ensign-manoeuvre-175", map_location="cuda:0")  # HR
+model2 = torch.load("saved_models_ridma/3_simple_lstm.py_qrs_20240408_161203_super-sun-183", map_location="cuda:0")  # QRS
+model3 = torch.load("saved_models_ridma/3_simple_lstm.py_pr_20240408_210313_fresh-surf-185", map_location="cuda:0")  # PR
+model4 = torch.load("saved_models_ridma/3_simple_lstm.py_qt_20240408_210752_honest-energy-186", map_location="cuda:0")  # QT
 
-# Freeze the parameters of the pre-trained models
-for param in model1.parameters():
-    param.requires_grad = False
+# model1 = SimpleLSTM()
+# model2 = SimpleLSTM()
+# model3 = SimpleLSTM()
+# model4 = SimpleLSTM()
 
-for param in model2.parameters():
-    param.requires_grad = False
+# # Freeze the parameters of the pre-trained models
+# for param in model1.parameters():
+#     param.requires_grad = False
 
-for param in model3.parameters():
-    param.requires_grad = False
+# for param in model2.parameters():
+#     param.requires_grad = False
 
-for param in model4.parameters():
-    param.requires_grad = False
+# for param in model3.parameters():
+#     param.requires_grad = False
+
+# for param in model4.parameters():
+#     param.requires_grad = False
 
 # Remove the last layer (MLP) from each model
 model1.lstm.flatten_parameters()
@@ -83,9 +92,8 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="LSTM transfer learning classification freezed",
+    notes="pretrained, not frozen LSTM transfer learning classification freezed",
 )
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
 model = CombinedLSTMModel(model1, model2, model3, model4, num_classes=5)
