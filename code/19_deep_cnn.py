@@ -13,7 +13,7 @@ import numpy as np
 import random
 from sklearn.model_selection import train_test_split
 
-from models.SimpleCNN import SimpleCNN
+from models.DeepCNN import DeepCNN
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
@@ -62,7 +62,7 @@ wandb.init(
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Create the model
-model = SimpleCNN().to(device)
+model = DeepCNN().to(device)
 
 # Create the dataset class
 dataset = Deepfake_ECG_Dataset(parameter=parameter)
