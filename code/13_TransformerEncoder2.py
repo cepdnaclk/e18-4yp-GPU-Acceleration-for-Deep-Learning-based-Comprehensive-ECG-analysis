@@ -350,13 +350,23 @@ for epoch in range(num_epochs):
 
             val_loss += loss.item()
 
+            if logging_enabled:
+                try:
+                    print("label      |     output")
+                    for round in range(batch_size):
+                        print(labels[round], "  |  ", outputs[round])
+                    print()
+                except Exception as e:
+                    # Print the error message
+                    print("An error occurred at print label and output:", e)
+
     #  Log metrics
-    wandb.log({"train_loss": train_loss / (len(train_dataloader) * batch_size), "val_loss": val_loss / (len(val_dataloader) * batch_size)})
+    wandb.log({"train_loss": train_loss / (len(train_dataloader)), "val_loss": val_loss / (len(val_dataloader))})
 
-    print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader)*batch_size)}")
-    print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader)*batch_size)}")
+    print(f"Epoch: {epoch} train_loss: {train_loss / (len(train_dataloader))}")
+    print(f"Epoch: {epoch} val_loss: {val_loss / (len(val_dataloader))}")
 
-    if (val_loss / (len(val_dataloader) * batch_size)) < best_validation_loss:
+    if (val_loss / (len(val_dataloader))) < best_validation_loss:
         best_validation_loss = val_loss
         best_model = model
 
