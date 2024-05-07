@@ -114,13 +114,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # Transposing the ECG signals
         ecg_signals = ecg_signals.t()
         return ecg_signals
-<<<<<<< HEAD
-    
-    def convert_to_Output_5000x8(self,ecg_signals):
-=======
 
     def convert_to_CH_8_2D_MATRIX_OUTPUT_TYPE(self, ecg_signals):
->>>>>>> cb29bed5a41f09360709a6fd2af78e0ab2721cf6
         ecg_signals = torch.tensor(ecg_signals.values, dtype=torch.float32)
         ecg_signals = torch.transpose(ecg_signals, 0, 1)  # take the transpose ||| 5000,8 >>>> 8,5000
         # ecg_signals = (ecg_signals + 3713.0) / 7642  # normalization : Range (0-1) # AS OF NOW, NOT BEING NORMALIZED
