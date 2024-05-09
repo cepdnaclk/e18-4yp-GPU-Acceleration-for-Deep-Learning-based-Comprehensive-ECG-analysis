@@ -101,9 +101,9 @@ class DeepCNN(nn.Module):
     def __init__(self):
         super(DeepCNN, self).__init__()
         # Convolutional layers
-        self.conv1 = nn.Conv1d(1, 32, kernel_size=5, stride=1, padding=2)
+        self.conv1 = nn.Conv1d(1, 40000, kernel_size=5, stride=1, padding=2)
         self.bn1 = nn.BatchNorm1d(40000)
-        self.conv2 = nn.Conv1d(32, 64, kernel_size=5, stride=1, padding=2)
+        self.conv2 = nn.Conv1d(40000, 64, kernel_size=5, stride=1, padding=2)
         self.bn2 = nn.BatchNorm1d(20000)
         self.conv3 = nn.Conv1d(64, 128, kernel_size=5, stride=1, padding=2)
         self.bn3 = nn.BatchNorm1d(10000)
