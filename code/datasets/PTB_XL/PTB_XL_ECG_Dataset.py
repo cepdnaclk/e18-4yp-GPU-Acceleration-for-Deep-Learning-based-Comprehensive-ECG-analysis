@@ -10,6 +10,7 @@ import datetime
 import socket
 import utils.datasets as utils_datasets
 from tqdm import tqdm
+import random
 
 DEFAULT = "default"
 INPUT_CHANNEL_8 = "input_channel_8"
@@ -68,6 +69,22 @@ class ECGDataset(Dataset):
 
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
+
+        # Filter the DataFrame to get only the 'NORM' records
+        norm_records = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: "NORM" in x)]
+
+        # Get the total count of 'NORM' records
+        norm_count = len(norm_records)
+        print(f"Total NORM records: {norm_count}")
+
+        # Calculate the number of records to drop
+        n_to_drop = norm_count - 3000
+
+        # Get a random sample of n_to_drop records to drop
+        drop_indices = random.sample(list(norm_records.index), n_to_drop)
+
+        # Drop the randomly selected records
+        self.Y = self.Y.drop(index=drop_indices)
 
     def __len__(self):
         #  return 1000
