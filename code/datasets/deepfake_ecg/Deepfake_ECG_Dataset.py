@@ -120,8 +120,19 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
     def convert_to_CH_8_2D_MATRIX_OUTPUT_TYPE(self, ecg_signals):
         ecg_signals = torch.tensor(ecg_signals.values, dtype=torch.float32)
         ecg_signals = torch.transpose(ecg_signals, 0, 1)  # take the transpose ||| 5000,8 >>>> 8,5000
-        # ecg_signals = (ecg_signals + 3713.0) / 7642  # normalization : Range (0-1) # AS OF NOW, NOT BEING NORMALIZED
+            
+        # ecg_signals = (ecg_signals + 3713.0) / 7642  # normalization : Range (0-1) # OLD NORMALIZATION WE USED : deprecated
         return ecg_signals
+    
+    def normaize_each_lead(self,ecg_signals):
+        for i in range(ecg_signals.shape[0]):  # Iterate through each signal
+            signal = ecg_signals[i]
+            min_val = torch.min(signal)
+            max_val = torch.max(signal)
+            normalized_signal = (signal - min_val) / (max_val - min_val)  # Normalize signal
+            ecg_signals[i] = normalized_signal
+        return ecg_signals
+        
 
     
 
@@ -350,6 +361,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == CH_8_2D_MATRIX_OUTPUT_TYPE:
             ecg_signals = self.convert_to_CH_8_2D_MATRIX_OUTPUT_TYPE(ecg_signals)
+            ecg_signals = self.normaize_each_lead(ecg_signals) # IF NORMALIZATION FOR EACH LEAD IS NOT REQUIRED : COMMENT THIS OUT
         elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
