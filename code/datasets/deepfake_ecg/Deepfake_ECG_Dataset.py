@@ -199,10 +199,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         return ecg_signals_gray
     
     def convert_to_FEATURE_EXTRACTION_ADEEPA(self, ecg_signals):
-        
-        ecg_signals = ecg_signals.values
-
-                # Without batch size
+        # Without batch size
         def process_ecg_intervals(ecg_data):
             """
             Process an 8-lead .asc file to extract PR, RT, and PT intervals.
@@ -361,7 +358,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == CH_8_2D_MATRIX_OUTPUT_TYPE:
             ecg_signals = self.convert_to_CH_8_2D_MATRIX_OUTPUT_TYPE(ecg_signals)
-            # ecg_signals = self.normaize_each_lead(ecg_signals) # IF NORMALIZATION FOR EACH LEAD IS NOT REQUIRED : COMMENT THIS OUT
+            ecg_signals = self.normaize_each_lead(ecg_signals) # IF NORMALIZATION FOR EACH LEAD IS NOT REQUIRED : COMMENT THIS OUT
         elif self.output_type == DEFAULT_SPECTROGRAM_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEFAULT_SPECTROGRAM_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE:
