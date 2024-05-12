@@ -46,8 +46,8 @@ val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
-    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 4")
-    num_workers = 4
+    print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 1")
+    num_workers = 1
 else:
     print(f"Running in {current_server.get_current_hostname()} server, Settings num_workers to 0")
     num_workers = 0
