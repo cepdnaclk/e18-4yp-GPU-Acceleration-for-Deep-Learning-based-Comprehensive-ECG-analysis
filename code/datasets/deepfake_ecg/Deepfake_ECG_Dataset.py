@@ -270,9 +270,17 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             # ecg_data = np.loadtxt(file_path)
             selected_leads = [0, 1, 4, 5, 6, 7]
             ecg_data_selected = ecg_data[:, selected_leads]
+            ecg_data_selected = ecg_data_selected.T
+                        
+            for i in range(ecg_data_selected.shape[0]):  # Iterate through each signal
+                signal = ecg_data_selected[i]
+                min_val = np.min(signal)
+                max_val = np.max(signal)
+                ecg_data_selected[i] = (signal - min_val) / (max_val - min_val)  # Normalize signal in place
+            
             lead_intervals = []
 
-            for i, ecg_lead in enumerate(ecg_data_selected.T):
+            for i, ecg_lead in enumerate(ecg_data_selected):
                 peaks, _ = find_peaks(ecg_lead, distance=350)
                 p_peaks = extract_p_peaks(ecg_lead, amplitude_range=(50, 150), peaks=peaks)
                 t_peaks = extract_t_peaks(ecg_lead, amplitude_range=(150, 250), peaks=peaks)
