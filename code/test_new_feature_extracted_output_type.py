@@ -57,23 +57,22 @@ train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_s
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Training loop
-try:
-    for epoch in range(num_epochs):
+
+for epoch in range(num_epochs):
+    for i, data in tqdm(
+        enumerate(train_dataloader, 0),
+        total=len(train_dataloader),
+        desc=f"Training Epoch {epoch + 1}/{num_epochs}",
+    ):
+        inputs, labels = data
+
+    # Validation loop
+    with torch.no_grad():
         for i, data in tqdm(
-            enumerate(train_dataloader, 0),
-            total=len(train_dataloader),
-            desc=f"Training Epoch {epoch + 1}/{num_epochs}",
+            enumerate(val_dataloader, 0),
+            total=len(val_dataloader),
+            desc=f"Validating Epoch {epoch + 1}/{num_epochs}",
         ):
             inputs, labels = data
 
-        # Validation loop
-        with torch.no_grad():
-            for i, data in tqdm(
-                enumerate(val_dataloader, 0),
-                total=len(val_dataloader),
-                desc=f"Validating Epoch {epoch + 1}/{num_epochs}",
-            ):
-                inputs, labels = data
-
-        print("reading all data okay")
-except Exception as e:
+    print("reading all data okay")
