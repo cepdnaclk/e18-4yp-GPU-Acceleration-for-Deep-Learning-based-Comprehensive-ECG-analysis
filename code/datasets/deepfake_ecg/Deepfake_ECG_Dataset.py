@@ -344,6 +344,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             header=None,
             sep=" ",
         )
+        ecg_signals_for_adeepa = np.loadtxt(f"{self.asc_files_path}{filename}.asc", delimiter=" ")
+
 
         if self.output_type == DEFAULT_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEFAULT_OUTPUT_TYPE(ecg_signals)
@@ -358,7 +360,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == FEATURE_EXTRACTION_ADEEPA:
-            ecg_signals = self.convert_to_FEATURE_EXTRACTION_ADEEPA(ecg_signals)
+            ecg_signals = self.convert_to_FEATURE_EXTRACTION_ADEEPA(ecg_signals_for_adeepa)
 
         parameter = self.parameter[index].reshape(-1)
 
