@@ -22,7 +22,7 @@ import datasets.deepfake_ecg.Deepfake_ECG_Dataset as deepfake_ecg_dataset
 parameter = HR_PARAMETER
 
 # Hyperparameters
-batch_size = 32
+batch_size = 1
 learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
@@ -92,6 +92,96 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epoc
 import numpy as np
 from scipy.signal import find_peaks
 
+ # With batch size
+# def process_ecg_intervals(ecg_data):
+#     print("ecg_data.shape : ",ecg_data.shape )
+#     """
+#     Process an 8-lead .asc file to extract PR, RT, and PT intervals for each signal in a batch.
+    
+#     Args:
+#     ecg_data (numpy.ndarray): Input array of shape (5000, 8, batch_size), where 5000 rows of data, 8 columns for each lead, and batch_size is the number of signals in the batch.
+    
+#     Returns:
+#     numpy.ndarray: Array containing PR, RT, and PT intervals for each lead and each signal in the batch.
+#     """
+#     def extract_p_peaks(ecg_lead, amplitude_range=(50, 150), peaks=None):
+#         if peaks is None:
+#             peaks, _ = find_peaks(ecg_lead, distance=350)
+
+#         p_peaks = []
+#         for i in range(len(peaks) - 1):
+#             r_peak = peaks[i]
+#             r_next_peak = peaks[i+1]
+            
+#             window_start = r_peak - 200
+#             window_end = r_peak - 50
+            
+#             window_peaks, _ = find_peaks(ecg_lead[window_start:window_end], height=amplitude_range)
+            
+#             p_peaks.extend([window_start + peak for peak in window_peaks])
+        
+#         return p_peaks
+
+#     def extract_t_peaks(ecg_lead, amplitude_range=(150, 250), peaks=None):
+#         if peaks is None:
+#             peaks, _ = find_peaks(ecg_lead, distance=350)
+
+#         t_peaks = []
+#         for i in range(len(peaks) - 1):
+#             r_peak = peaks[i]
+#             r_next_peak = peaks[i+1]
+            
+#             window_start = r_peak + 50
+#             window_end = r_next_peak - 200
+            
+#             window_peaks, _ = find_peaks(ecg_lead[window_start:window_end], height=amplitude_range)
+            
+#             t_peaks.extend([window_start + peak for peak in window_peaks])
+        
+#         return t_peaks
+
+#     def calculate_intervals(ecg_lead, p_peaks, r_peaks, t_peaks, sampling_rate):
+#         intervals = []
+#         for i, r_peak in enumerate(r_peaks):
+#             if i == 0 or i == len(r_peaks) - 1:
+#                 continue
+
+#             p_peak_idx = np.argmax(np.array(p_peaks) < r_peak)
+#             p_peak = p_peaks[p_peak_idx]
+
+#             t_peak_idx = np.argmax(np.array(t_peaks) > r_peak)
+#             t_peak = t_peaks[t_peak_idx]
+
+#             pr_interval = (r_peak - p_peak) / sampling_rate
+#             rt_interval = (t_peak - r_peak) / sampling_rate
+#             pt_interval = (t_peak - p_peak) / sampling_rate
+
+#             intervals.append([pr_interval, rt_interval, pt_interval])
+
+#         return np.array(intervals)
+
+#     sampling_rate = 500
+#     lead_intervals = []
+
+#     for batch_idx in range(ecg_data.shape[2]):
+#         ecg_data_selected = ecg_data[:, :, batch_idx]
+#         batch_lead_intervals = []
+
+#         for i, ecg_lead in enumerate(ecg_data_selected.T):
+#             peaks, _ = find_peaks(ecg_lead, distance=350)
+#             p_peaks = extract_p_peaks(ecg_lead, amplitude_range=(50, 150), peaks=peaks)
+#             t_peaks = extract_t_peaks(ecg_lead, amplitude_range=(150, 250), peaks=peaks)
+#             intervals = calculate_intervals(ecg_lead, p_peaks, peaks, t_peaks, sampling_rate)
+#             batch_lead_intervals.append(intervals)
+
+#         lead_intervals.append(batch_lead_intervals)
+
+#     all_lead_intervals = np.array(lead_intervals)
+#     print("all_lead_intervals.shape : ",all_lead_intervals.shape )
+#     return all_lead_intervals
+
+
+# Without batch size
 def process_ecg_intervals(ecg_data):
     """
     Process an 8-lead .asc file to extract PR, RT, and PT intervals.
@@ -194,9 +284,20 @@ for epoch in range(num_epochs):
         inputs, labels = inputs.to(device), labels.to(device)
 
         optimizer.zero_grad()
-        print("##############################################@@@@@@@@@@@@@@@@############# inputs : ", inputs.shape)
-        inputs = process_ecg_intervals(inputs)                           # FUNCTION CALL
-        print("########################################################### inputs : ", inputs)
+        print("##############################################---------------------------############# inputs.shape : ", inputs.shape)
+        
+        # print("########################################################### inputs : ", inputs)
+        inputs = inputs.squeeze()
+
+        # file_path = "D:\SEM_07\FYP\e18-4yp-GPU-Acceleration-for-Deep-Learning-based-Comprehensive-ECG-analysis\code\others/124.asc"
+        # inputs = np.loadtxt(file_path)
+        print("########################################################### Before FUNCTION CALL inputs : ", inputs)
+        print("########################################################### type(inputs) : ", type(inputs))
+        print("##############################################---------------------------############# inputs.shape : ", inputs.shape)
+
+        inputs = process_ecg_intervals(inputs.numpy())                           # FUNCTION CALL
+        print("########################################################### After FUNCTION CALL inputs : ", inputs)
+        print("##############################################@@@@@@@@@@@@@@@@############# inputs.shape : ", inputs.shape)
         outputs = model(inputs)
         loss = criterion(outputs, labels)
         loss.backward()

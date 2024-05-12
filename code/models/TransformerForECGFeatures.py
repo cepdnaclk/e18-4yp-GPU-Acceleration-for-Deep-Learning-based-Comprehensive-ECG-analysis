@@ -46,7 +46,7 @@ class TransformerEncoderModel(nn.Module):
     def forward(self, x):
 
         print("----------------------- x.shape : ",x.shape)
-        print("----------------------- x[0] : ",x[0])
+        print("----------------------- x : ",x)
 
         batch_size, _, _ = x.size()
         x = self.embedding_layer(x)

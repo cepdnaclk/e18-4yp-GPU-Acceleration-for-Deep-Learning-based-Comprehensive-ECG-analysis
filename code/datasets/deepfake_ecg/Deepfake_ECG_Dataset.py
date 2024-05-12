@@ -12,6 +12,7 @@ import socket
 import utils.current_server as current_server
 from datetime import datetime
 import utils.datasets as utils_datasets
+from scipy.signal import find_peaks
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -185,6 +186,95 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # NOTE : In ViT channels can be set to 1 for Grayscale images !
         ecg_signals_gray = F.rgb_to_grayscale(ecg_signals_RGB, num_output_channels=3)
         return ecg_signals_gray
+    
+    def RAW(self, ecg_signals):
+        
+        ecg_signals = ecg_signals.values
+
+                # Without batch size
+        def process_ecg_intervals(ecg_data):
+            """
+            Process an 8-lead .asc file to extract PR, RT, and PT intervals.
+            
+            Args:
+            file_path (str): Path to the .asc file.
+            
+            Returns:
+            numpy.ndarray: Array containing PR, RT, and PT intervals for each lead.
+            """
+            def extract_p_peaks(ecg_lead, amplitude_range=(50, 150), peaks=None):
+                if peaks is None:
+                    peaks, _ = find_peaks(ecg_lead, distance=350)
+
+                p_peaks = []
+                for i in range(len(peaks) - 1):
+                    r_peak = peaks[i]
+                    r_next_peak = peaks[i+1]
+                    
+                    window_start = r_peak - 200
+                    window_end = r_peak - 50
+                    
+                    window_peaks, _ = find_peaks(ecg_lead[window_start:window_end], height=amplitude_range)
+                    
+                    p_peaks.extend([window_start + peak for peak in window_peaks])
+                
+                return p_peaks
+
+            def extract_t_peaks(ecg_lead, amplitude_range=(150, 250), peaks=None):
+                if peaks is None:
+                    peaks, _ = find_peaks(ecg_lead, distance=350)
+
+                t_peaks = []
+                for i in range(len(peaks) - 1):
+                    r_peak = peaks[i]
+                    r_next_peak = peaks[i+1]
+                    
+                    window_start = r_peak + 50
+                    window_end = r_next_peak - 200
+                    
+                    window_peaks, _ = find_peaks(ecg_lead[window_start:window_end], height=amplitude_range)
+                    
+                    t_peaks.extend([window_start + peak for peak in window_peaks])
+                
+                return t_peaks
+
+            def calculate_intervals(ecg_lead, p_peaks, r_peaks, t_peaks, sampling_rate):
+                intervals = []
+                for i, r_peak in enumerate(r_peaks):
+                    if i == 0 or i == len(r_peaks) - 1:
+                        continue
+
+                    p_peak_idx = np.argmax(np.array(p_peaks) < r_peak)
+                    p_peak = p_peaks[p_peak_idx]
+
+                    t_peak_idx = np.argmax(np.array(t_peaks) > r_peak)
+                    t_peak = t_peaks[t_peak_idx]
+
+                    pr_interval = (r_peak - p_peak) / sampling_rate
+                    rt_interval = (t_peak - r_peak) / sampling_rate
+                    pt_interval = (t_peak - p_peak) / sampling_rate
+
+                    intervals.append([pr_interval, rt_interval, pt_interval])
+
+                return np.array(intervals)
+
+            sampling_rate = 500
+            # ecg_data = np.loadtxt(file_path)
+            selected_leads = [0, 1, 4, 5, 6, 7]
+            ecg_data_selected = ecg_data[:, selected_leads]
+            lead_intervals = []
+
+            for i, ecg_lead in enumerate(ecg_data_selected.T):
+                peaks, _ = find_peaks(ecg_lead, distance=350)
+                p_peaks = extract_p_peaks(ecg_lead, amplitude_range=(50, 150), peaks=peaks)
+                t_peaks = extract_t_peaks(ecg_lead, amplitude_range=(150, 250), peaks=peaks)
+                intervals = calculate_intervals(ecg_lead, p_peaks, peaks, t_peaks, sampling_rate)
+                lead_intervals.append(intervals)
+
+            all_lead_intervals = np.array(lead_intervals)
+            return all_lead_intervals
+        
+        return process_ecg_intervals(ecg_signals)
 
     def convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(self, ecg_signals):
 
@@ -268,9 +358,10 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(ecg_signals)
         elif self.output_type == RAW:
-            ecg_signals = ecg_signals
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX------------------------------- RAW -----------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            print(" ecg_signals.shape : ",ecg_signals.shape)
+            ecg_signals = self.RAW(ecg_signals)
+            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX------------------------------- RAW -----------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            # print(" ecg_signals.type : ",type(ecg_signals))
+            # print(" ecg_signals.shape : ",ecg_signals.shape)
 
         parameter = self.parameter[index].reshape(-1)
 
