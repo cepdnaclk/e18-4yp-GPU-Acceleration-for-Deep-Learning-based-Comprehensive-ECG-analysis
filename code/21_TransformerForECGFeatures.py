@@ -57,7 +57,7 @@ model = TransformerEncoderModel(input_size, num_layers, num_heads, dim_feedforwa
 
 # Create the dataset class
 # Load all_lead_intervals here and provide it as an argument
-dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=deepfake_ecg_dataset.RAW)
+dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=deepfake_ecg_dataset.FEATURE_EXTRACTION_ADEEPA)
 
 print(len(dataset))
 

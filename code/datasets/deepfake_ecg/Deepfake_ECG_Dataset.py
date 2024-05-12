@@ -41,7 +41,7 @@ DEFAULT_SPECTROGRAM_OUTPUT_TYPE = "spectrogram"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE = "vision_transformer_image"
 VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY = "vision_transformer_image_grey"
 DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE = "deep_vit_grey_256_image"
-RAW = 'RAW'
+FEATURE_EXTRACTION_ADEEPA = 'feature_extraction_by_adeepa'
 
 
 class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
@@ -187,7 +187,7 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         ecg_signals_gray = F.rgb_to_grayscale(ecg_signals_RGB, num_output_channels=3)
         return ecg_signals_gray
     
-    def RAW(self, ecg_signals):
+    def convert_to_FEATURE_EXTRACTION_ADEEPA(self, ecg_signals):
         
         ecg_signals = ecg_signals.values
 
@@ -357,11 +357,8 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             ecg_signals = self.convert_to_VISION_TRANSFORMER_IMAGE_OUTPUT_TYPE_GREY(ecg_signals)
         elif self.output_type == DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE:
             ecg_signals = self.convert_to_DEEP_VIT_GREY_256_IMAGE_OUTPUT_TYPE(ecg_signals)
-        elif self.output_type == RAW:
-            ecg_signals = self.RAW(ecg_signals)
-            # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX------------------------------- RAW -----------------------------XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-            # print(" ecg_signals.type : ",type(ecg_signals))
-            # print(" ecg_signals.shape : ",ecg_signals.shape)
+        elif self.output_type == FEATURE_EXTRACTION_ADEEPA:
+            ecg_signals = self.convert_to_FEATURE_EXTRACTION_ADEEPA(ecg_signals)
 
         parameter = self.parameter[index].reshape(-1)
 
