@@ -10,6 +10,7 @@ pip3 install wandb==0.16.1
 pip3 install einops==0.7.0
 pip3 install -U scikit-learn==1.4.1.post1
 pip3 install snntorch==0.8.1
+pip3 install fastai==1.0.61
 
 # after that 
 # 'wandb login' 
