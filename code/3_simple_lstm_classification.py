@@ -47,7 +47,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2_classification",
+    project="version3_classification",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -113,12 +113,12 @@ for epoch in range(num_epochs):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-        
-        if(logging_enabled):
+
+        if logging_enabled:
             try:
                 print("label      |     output")
                 for round in range(batch_size):
-                    print(labels[round],"  |  ",outputs[round])
+                    print(labels[round], "  |  ", outputs[round])
                 print()
             except Exception as e:
                 # Print the error message

@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
@@ -33,7 +34,7 @@ if torch.cuda.is_available():
 
 # start a new wandb run to track this script
 wandb.init(
-    project="version2_classification",
+    project="version3_classification",
     config={
         "model": "DecisionTree",
         "dataset": "PTB-XL",

@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -12,7 +13,6 @@ import numpy as np
 import random
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
-
 
 
 # Record the start time
@@ -44,7 +44,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2_classification",
+    project="version3_classification",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,

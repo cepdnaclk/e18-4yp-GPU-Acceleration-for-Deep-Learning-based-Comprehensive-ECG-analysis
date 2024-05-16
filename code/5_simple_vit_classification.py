@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -40,7 +41,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 # start a new wandb run to track this script
 wandb.init(
-    project="version2_classification",
+    project="version3_classification",
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
@@ -106,17 +107,17 @@ for epoch in range(num_epochs):
         labels_max = torch.argmax(labels, 1)
         total_correct += (predicted == labels_max).sum().item()
         total_samples += labels.size(0)
-        
+
         all_outputs.extend(outputs.detach().cpu().numpy())
         all_labels.extend(labels.cpu().numpy())
-    
+
     # Compute accuracy
     train_accuracy = total_correct / total_samples
     # Compute AUC-ROC
     all_outputs = np.concatenate(all_outputs, axis=0)
     all_labels = np.concatenate(all_labels, axis=0)
     train_auc_roc = roc_auc_score(all_labels, all_outputs)
-    
+
     print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
 
     # Validation loop
@@ -135,35 +136,35 @@ for epoch in range(num_epochs):
             inputs, labels = inputs.to(device), labels.to(device)
             mask = torch.ones((1, 1, 1)).to(device)  # Example mask with size (1,)
             outputs = model(inputs, mask)
-            
+
             # Calculate accuracy
             predicted = torch.argmax(outputs, 1)
             labels_max = torch.argmax(labels, 1)
             total_correct += (predicted == labels_max).sum().item()
             total_samples += labels.size(0)
-            
+
             # Store outputs and labels for AUC-ROC calculation
             all_outputs.extend(outputs.detach().cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
-            
+
         # Compute accuracy
         val_accuracy = total_correct / total_samples
         # Compute AUC-ROC
         all_outputs = np.concatenate(all_outputs, axis=0)
         all_labels = np.concatenate(all_labels, axis=0)
         val_auc_roc = roc_auc_score(all_labels, all_outputs)
-        
+
         # Log metrics
         print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
-        
+
         wandb.log(
-        {
-            "train_accuracy": train_accuracy,
-            "train_AUC": train_auc_roc,
-            "val_accuracy": val_accuracy,
-            "val_AUC": val_auc_roc,
-        }
-    )
+            {
+                "train_accuracy": train_accuracy,
+                "train_AUC": train_auc_roc,
+                "val_accuracy": val_accuracy,
+                "val_AUC": val_auc_roc,
+            }
+        )
 
 print("Finished Training")
 wandb.finish()

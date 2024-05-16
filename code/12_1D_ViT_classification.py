@@ -49,7 +49,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2_classification",
+    project="version3_classification",
     # track hyperparameters and run metadata
     config={"learning_rate": learning_rate, "architecture": os.path.basename(__file__), "dataset": "PTB-XL", "epochs": num_epochs, "parameter": "classification", "sceduler": "CyclicLR"},
 )

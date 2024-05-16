@@ -1,5 +1,6 @@
 import utils.others as others
-print(f"Last updated by: ",others.get_latest_update_by())
+
+print(f"Last updated by: ", others.get_latest_update_by())
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -44,7 +45,7 @@ dim_feedforward = 2048
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2_classification",
+    project="version3_classification",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -174,9 +175,8 @@ for epoch in range(num_epochs):
             "val_AUC": val_auc_roc,
         }
     )
-#Model is not saved since it will not be needed :
-#in needed add here
+# Model is not saved since it will not be needed :
+# in needed add here
 
 print("Finished Training")
 wandb.finish()
-
