@@ -2,7 +2,7 @@ import utils.others as others
 
 print(f"Last updated by: ", others.get_latest_update_by())
 
-logging_enabled = True
+logging_enabled = False
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -27,7 +27,7 @@ INPUT_CHANNEL_8 = "input_channel_8"
 
 # Hyperparameters
 batch_size = 32
-learning_rate = 0.001
+learning_rate = 0.01
 num_epochs = 50
 train_fraction = 0.8
 
@@ -47,7 +47,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2_classification",
+    project="version3_classification",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -60,10 +60,10 @@ wandb.init(
 )
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model
-model = Inception1d().to(device)
+model = Inception1d(num_classes=5, input_channels=12, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
+dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8, num_of_leads=12)
 
 
 # Split the dataset into training and validation sets
@@ -106,19 +106,16 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         outputs = model(inputs)
-        # print("inputs shape", inputs.shape)
-        # print("outputs shape", outputs.shape)
-        # print("labels shape", labels.shape)
-        # quit()
+
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-        
-        if(logging_enabled):
+
+        if logging_enabled:
             try:
                 print("label      |     output")
                 for round in range(batch_size):
-                    print(labels[round],"  |  ",outputs[round])
+                    print(labels[round], "  |  ", outputs[round])
                 print()
             except Exception as e:
                 # Print the error message
