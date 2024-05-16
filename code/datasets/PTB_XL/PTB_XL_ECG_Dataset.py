@@ -31,10 +31,11 @@ def signal_lowpass_filter(signal, sampling_rate, cutoff_freq=30, order=4):
 class ECGDataset(Dataset):
     labels = ["MI", "STTC", "HYP", "NORM", "CD"]
 
-    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500, no_of_input_channels=DEFAULT):
+    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500, no_of_input_channels=DEFAULT, num_of_leads=8):
         self.path = path
         self.sampling_rate = sampling_rate
         self.no_of_input_channels = no_of_input_channels
+        self.num_of_leads = num_of_leads
 
         path_in_ram = f"/dev/shm/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
         if hostname == "ampere":
@@ -53,11 +54,6 @@ class ECGDataset(Dataset):
         self.Y = pd.read_csv(self.path + "ptbxl_database.csv", index_col="ecg_id")
         self.Y.scp_codes = self.Y.scp_codes.apply(lambda x: ast.literal_eval(x))
 
-        # Load raw signal data
-        self.X = self.load_raw_data()
-        # standardize self.X
-        self.X = (self.X - np.mean(self.X)) / np.std(self.X)
-
         # normalize self.X
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
 
@@ -70,21 +66,11 @@ class ECGDataset(Dataset):
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
-        # Filter the DataFrame to get only the 'NORM' records
-        norm_records = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: "NORM" in x)]
+        # Load raw signal data
+        self.X = self.load_raw_data()
 
-        # Get the total count of 'NORM' records
-        norm_count = len(norm_records)
-        print(f"Total NORM records: {norm_count}")
-
-        # Calculate the number of records to drop
-        n_to_drop = norm_count - 3000
-
-        # Get a random sample of n_to_drop records to drop
-        drop_indices = random.sample(list(norm_records.index), n_to_drop)
-
-        # Drop the randomly selected records
-        self.Y = self.Y.drop(index=drop_indices)
+        # standardize self.X
+        self.X = (self.X - np.mean(self.X)) / np.std(self.X)
 
     def __len__(self):
         #  return 1000
@@ -100,10 +86,15 @@ class ECGDataset(Dataset):
         return x, y
 
     def load_raw_data(self):
+        if self.num_of_leads == 8:
+            channels_to_extract = [0, 1, 6, 7, 8, 9, 10, 11]
+        elif self.num_of_leads == 12:
+            channels_to_extract = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            
         if self.sampling_rate == 100:
-            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in tqdm(self.Y.filename_lr)]
+            data = [wfdb.rdsamp(self.path + f, channels=channels_to_extract) for f in tqdm(self.Y.filename_lr)]
         else:
-            data = [wfdb.rdsamp(self.path + f, channels=[0, 1, 6, 7, 8, 9, 10, 11]) for f in tqdm(self.Y.filename_hr)]
+            data = [wfdb.rdsamp(self.path + f, channels=channels_to_extract) for f in tqdm(self.Y.filename_hr)]
 
         data = np.array([signal for signal, _ in data])  # here _ is metadata : leftout
 
