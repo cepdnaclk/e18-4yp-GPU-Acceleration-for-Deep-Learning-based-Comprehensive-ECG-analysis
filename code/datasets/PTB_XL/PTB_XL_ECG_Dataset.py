@@ -67,10 +67,16 @@ class ECGDataset(Dataset):
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
         # Load raw signal data
+        print("loading raw data")
         self.X = self.load_raw_data()
+        
+        print("normalizing each lead")
+        self.X = self.normalize_each_lead(self.X)
+        
+        print("init done")
 
         # standardize self.X
-        self.X = (self.X - np.mean(self.X)) / np.std(self.X)
+        # self.X = (self.X - np.mean(self.X)) / np.std(self.X)
 
     def __len__(self):
         #  return 1000
@@ -85,6 +91,15 @@ class ECGDataset(Dataset):
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
         return x, y
 
+    def normalize_each_lead(self, ecg_signals):
+        for i in range(ecg_signals.shape[0]):  # Iterate through each sample
+            for j in range(ecg_signals.shape[2]):  # Iterate through each lead
+                signal = ecg_signals[i, :, j]
+                min_val = np.min(signal)
+                max_val = np.max(signal)
+                ecg_signals[i, :, j] = (signal - min_val) / (max_val - min_val)  # Normalize lead
+        return ecg_signals
+    
     def load_raw_data(self):
         if self.num_of_leads == 8:
             channels_to_extract = [0, 1, 6, 7, 8, 9, 10, 11]
