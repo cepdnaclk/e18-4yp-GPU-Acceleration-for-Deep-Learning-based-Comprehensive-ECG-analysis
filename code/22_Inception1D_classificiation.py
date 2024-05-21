@@ -56,7 +56,7 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="modified LSTM classification",
+    notes="",
 )
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model

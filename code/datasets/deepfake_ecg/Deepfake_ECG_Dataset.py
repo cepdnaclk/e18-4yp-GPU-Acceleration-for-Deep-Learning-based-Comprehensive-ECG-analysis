@@ -14,6 +14,8 @@ from datetime import datetime
 import utils.datasets as utils_datasets
 from scipy.signal import find_peaks
 
+import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -82,8 +84,9 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
         # load the ground truth labels
         print("loading ground truth labels")
         self.ground_truths = pandas.read_csv(self.ground_truth_lables_csv_path)
-        print("loaded ground truth labels")
-
+        self.ground_truths = self.clean_deepfake_dataset(self.ground_truths)
+        print("loaded cleaned ground truth labels")
+        
         if parameter == HR_PARAMETER:
             parameter = torch.tensor(self.ground_truths["avgrrinterval"].values, dtype=torch.float32)
             # calculate HR
@@ -94,6 +97,46 @@ class Deepfake_ECG_Dataset(torch.utils.data.Dataset):
             self.parameter = torch.tensor(self.ground_truths["pr"].values, dtype=torch.float32)
         elif parameter == QT_PARAMETER:
             self.parameter = torch.tensor(self.ground_truths["qt"].values, dtype=torch.float32)
+
+    def clean_deepfake_dataset(self, ground_truths):
+        start_time = time.time()
+        # Print the total number of rows initially
+        total_rows = len(ground_truths)
+        print(f"Total number of rows initially: {total_rows}")
+
+        # Identify and remove NaN values
+        columns_to_clean = ['avgrrinterval', 'qrs', 'pr', 'qt']
+        ground_truths_cleaned = ground_truths.dropna(subset=columns_to_clean)
+
+        # Calculate parameters
+        # ground_truths_cleaned.loc[:, 'hr'] = 60 * 1000 / ground_truths_cleaned['avgrrinterval']
+        ground_truths_cleaned = ground_truths_cleaned.copy()
+        ground_truths_cleaned['hr'] = 60 * 1000 / ground_truths_cleaned['avgrrinterval']
+
+
+        # Detect and remove outliers
+        threshold = 3  # Standard deviations for outlier detection
+        print("threshold =", threshold)
+
+        for param in ['hr', 'qrs', 'pr', 'qt']:
+            median = ground_truths_cleaned[param].median()
+            std = ground_truths_cleaned[param].std()
+            outlier_mask = np.abs(ground_truths_cleaned[param] - median) > threshold * std
+            ground_truths_cleaned = ground_truths_cleaned[~outlier_mask]
+
+        # Print the number of rows dropped
+        rows_dropped = total_rows - len(ground_truths_cleaned)
+        print(f"Number of rows dropped: {rows_dropped}")
+
+        # Print the remaining number of rows
+        remaining_rows = len(ground_truths_cleaned)
+        print(f"Remaining number of rows: {remaining_rows}")
+        
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("time taken to clean the dataset :",elapsed_time)
+        
+        return ground_truths_cleaned
 
     def connect_ecgs_one_after_the_other(self, ecg_signals):
         # files have 8 columns, each column has one lead
