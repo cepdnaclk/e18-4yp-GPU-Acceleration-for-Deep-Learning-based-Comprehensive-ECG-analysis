@@ -13,7 +13,7 @@ from tqdm import tqdm
 import random
 
 DEFAULT = "default"
-INPUT_CHANNEL_8 = "input_channel_8"
+SHAPE_2D = "shape_2d"
 
 
 # decide to run the full dataset or no based on the server or local machine
@@ -31,10 +31,10 @@ def signal_lowpass_filter(signal, sampling_rate, cutoff_freq=30, order=4):
 class ECGDataset(Dataset):
     labels = ["MI", "STTC", "HYP", "NORM", "CD"]
 
-    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500, no_of_input_channels=DEFAULT, num_of_leads=8):
+    def __init__(self, path="./datasets/PTB_XL/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/", sampling_rate=500, input_shape=DEFAULT, num_of_leads=8):
         self.path = path
         self.sampling_rate = sampling_rate
-        self.no_of_input_channels = no_of_input_channels
+        self.no_of_input_channels = input_shape
         self.num_of_leads = num_of_leads
 
         path_in_ram = f"/dev/shm/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/"
@@ -69,10 +69,10 @@ class ECGDataset(Dataset):
         # Load raw signal data
         print("loading raw data")
         self.X = self.load_raw_data()
-        
+
         print("normalizing each lead")
         self.X = self.normalize_each_lead(self.X)
-        
+
         print("init done")
 
         # standardize self.X
@@ -85,7 +85,7 @@ class ECGDataset(Dataset):
     def __getitem__(self, idx):
         if self.no_of_input_channels == DEFAULT:
             x = torch.Tensor(self.X[idx].flatten())
-        elif self.no_of_input_channels == INPUT_CHANNEL_8:
+        elif self.no_of_input_channels == SHAPE_2D:
             x = torch.Tensor(self.X[idx]).transpose(0, 1)  # Transpose the tensor to (8, 5000)
         y = self.Y["diagnostic_superclass"].iloc[idx][0]
         y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
@@ -99,13 +99,13 @@ class ECGDataset(Dataset):
                 max_val = np.max(signal)
                 ecg_signals[i, :, j] = (signal - min_val) / (max_val - min_val)  # Normalize lead
         return ecg_signals
-    
+
     def load_raw_data(self):
         if self.num_of_leads == 8:
             channels_to_extract = [0, 1, 6, 7, 8, 9, 10, 11]
         elif self.num_of_leads == 12:
             channels_to_extract = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-            
+
         if self.sampling_rate == 100:
             data = [wfdb.rdsamp(self.path + f, channels=channels_to_extract) for f in tqdm(self.Y.filename_lr)]
         else:

@@ -22,8 +22,7 @@ start_time = time.time()
 
 from models.SimpleLSTMClassification import SimpleLSTMClassification
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
-
-INPUT_CHANNEL_8 = "input_channel_8"
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import SHAPE_2D
 
 # Hyperparameters
 batch_size = 1
@@ -63,7 +62,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTMClassification().to(device)
 
 # Create the dataset class
-dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8)
+dataset = ECGDataset(input_shape=SHAPE_2D)
 
 
 # Split the dataset into training and validation sets

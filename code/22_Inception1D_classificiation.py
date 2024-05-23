@@ -63,7 +63,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Inception1d(num_classes=5, input_channels=12, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = ECGDataset(no_of_input_channels=INPUT_CHANNEL_8, num_of_leads=12)
+dataset = ECGDataset(input_shape=INPUT_CHANNEL_8, num_of_leads=12)
 
 
 # Split the dataset into training and validation sets
