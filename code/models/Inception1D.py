@@ -107,3 +107,41 @@ class Inception1d(nn.Module):
     def forward(self,x):
         return self.layers(x)
     
+class Inception1dCombined(nn.Module):
+    """inception time architecture"""
+
+    def __init__(self, model1, model2, model3, model4):
+        super().__init__()
+        self.model1 = model1
+        self.model2 = model2
+        self.model3 = model3
+        self.model4 = model4
+
+        self.layers = nn.Sequential(
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(16, 5),
+            # nn.Softmax()
+        )
+
+    def forward(self, x):
+        model1_output = self.model1(x)
+        model2_output = self.model2(x)
+        model3_output = self.model3(x)
+        model4_output = self.model4(x)
+
+        combined_output = torch.cat((model1_output, model2_output, model3_output, model4_output), dim=1)
+        return self.layers(combined_output)
