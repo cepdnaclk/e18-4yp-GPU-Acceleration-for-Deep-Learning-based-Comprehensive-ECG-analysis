@@ -14,7 +14,7 @@ import random
 from sklearn.metrics import roc_auc_score
 
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
-from models.Inception1D import Inception1dCombined
+from models.Inception1D import Inception1dCombined, Inception1d
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import SHAPE_2D
 
 start_time = time.time()
@@ -37,28 +37,29 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Load the pre-trained models
 # TODO : add the correct paths to here >>>
 # Load the pre-trained models with correct device mapping
-model1 = torch.load("saved_models/22_Inception1D.py_qt_20240523_111357_colorful-sun-362", map_location="cuda:0")  # HR
-model2 = torch.load("saved_models/22_Inception1D.py_pr_20240523_111347_fast-surf-361", map_location="cuda:0")  # QRS
-model3 = torch.load("saved_models/22_Inception1D.py_qrs_20240523_111328_cerulean-smoke-360", map_location="cuda:0")  # PR
-model4 = torch.load("saved_models/22_Inception1D.py_hr_20240523_111112_winter-tree-359", map_location="cuda:0")  # QT
+# model1 = torch.load("saved_models/22_Inception1D.py_qt_20240523_111357_colorful-sun-362", map_location="cuda:0")  # HR
+# model2 = torch.load("saved_models/22_Inception1D.py_pr_20240523_111347_fast-surf-361", map_location="cuda:0")  # QRS
+# model3 = torch.load("saved_models/22_Inception1D.py_qrs_20240523_111328_cerulean-smoke-360", map_location="cuda:0")  # PR
+# model4 = torch.load("saved_models/22_Inception1D.py_hr_20240523_111112_winter-tree-359", map_location="cuda:0")  # QT
 
-# model1 = Inception1d()
-# model2 = Inception1d()
-# model3 = Inception1d()
-# model4 = Inception1d()
+model1 = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
+model2 = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
+model3 = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
+model4 = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
+
 
 # Freeze the parameters of the pre-trained models
-for param in model1.parameters():
-    param.requires_grad = False
+# for param in model1.parameters():
+#     param.requires_grad = False
 
-for param in model2.parameters():
-    param.requires_grad = False
+# for param in model2.parameters():
+#     param.requires_grad = False
 
-for param in model3.parameters():
-    param.requires_grad = False
+# for param in model3.parameters():
+#     param.requires_grad = False
 
-for param in model4.parameters():
-    param.requires_grad = False
+# for param in model4.parameters():
+#     param.requires_grad = False
 
 # Remove the last layer (MLP) from each model
 model1.layers[1].pop(8)
@@ -68,7 +69,7 @@ model4.layers[1].pop(8)
 
 # Hyperparameters
 batch_size = 32
-learning_rate = 0.01
+learning_rate = 0.001
 num_epochs = 50
 train_fraction = 0.8
 
@@ -84,7 +85,7 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="pretrained 4 inception1d models with deepfake. last layer removed. combined in a new model. with new linear layer at end",
+    notes="""not pretrained, 4 models combined, create another inception1d at the end of if after stacked """,
 )
 
 # Create the model
