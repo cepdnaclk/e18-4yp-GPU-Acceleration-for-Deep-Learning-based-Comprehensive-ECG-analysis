@@ -15,12 +15,10 @@ import utils.current_server as current_server
 
 from models.Inception1D import Inception1d
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import HR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QRS_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import PR_PARAMETER
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import QT_PARAMETER
 
 from datasets.deepfake_ecg.Deepfake_ECG_Dataset import CH_8_2D_MATRIX_OUTPUT_TYPE
+
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset, HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER
 
 from sklearn.model_selection import train_test_split
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -28,9 +26,9 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 1000  # used to be 1000 : HR was best around 500 ep
+num_epochs = 200  # used to be 1000 : HR was best around 500 ep
 train_fraction = 0.8
-parameter = HR_PARAMETER
+parameter = QT_PARAMETER
 
 patience = 30
 early_stopping_counter = 0
@@ -59,7 +57,7 @@ wandb.init(
     config={
         "learning_rate": learning_rate,
         "architecture": os.path.basename(__file__),
-        "dataset": "Deepfake_ECG_Dataset",
+        "dataset": "PTB XL PLUS",
         "epochs": num_epochs,
         "parameter": parameter,
     },
@@ -73,7 +71,8 @@ model = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=
 
 
 # Create the dataset class
-dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=CH_8_2D_MATRIX_OUTPUT_TYPE)
+# dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=CH_8_2D_MATRIX_OUTPUT_TYPE)
+dataset = PTB_XL_PLUS_ECGDataset(parameter)
 
 # Split the dataset into training and validation sets
 train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)

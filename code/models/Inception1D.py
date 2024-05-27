@@ -103,6 +103,8 @@ class InceptionBackbone(nn.Module):
 class Inception1d(nn.Module):
     """inception time architecture"""
 
+    # (8, 5000) -> 68
+
     def __init__(self, num_classes=5, input_channels=8, kernel_size=40, depth=6, bottleneck_size=32, nb_filters=32, use_residual=True, lin_ftrs_head=None, ps_head=0.5, bn_final_head=False, bn_head=True, act_head="relu", concat_pooling=True):
         super().__init__()
         assert kernel_size >= 40
@@ -126,11 +128,12 @@ class Inception1dCombined(nn.Module):
 
     def __init__(self, model1, model2, model3, model4):
         super().__init__()
+
         self.model1 = model1
         self.model2 = model2
         self.model3 = model3
         self.model4 = model4
-        
+
         self.last_inception = Inception1d(num_classes=5, input_channels=4, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to("cuda:0")
 
         self.layers = nn.Sequential(
@@ -148,11 +151,11 @@ class Inception1dCombined(nn.Module):
         model4_output = self.model4(x)
 
         # combined_output = torch.cat((model1_output, model2_output, model3_output, model4_output), dim=1)
-        
+
         # stach the output from the models and create a matrix with dimension 4
         combined_output = torch.stack((model1_output, model2_output, model3_output, model4_output), dim=1)
-        
+
         # x = self.layers(combined_output)
         x = self.last_inception(combined_output)
-        
+
         return x

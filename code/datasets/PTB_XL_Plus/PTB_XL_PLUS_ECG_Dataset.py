@@ -77,13 +77,14 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                 file_name_hr = matching_row["filename_hr"].values[0]
                 file_path = path_to_ptb_xl_dataset + file_name_hr
                 data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
-                flattened_data = data.flatten()
+                # flattened_data = data.flatten()
 
-                # normalization
-                flattened_data = flattened_data / 27
+                # # normalization
+                # flattened_data = flattened_data / 27
 
-                flattened_data = torch.tensor(flattened_data, dtype=torch.float32)
-                self.X.append(flattened_data)
+                # flattened_data = torch.tensor(flattened_data, dtype=torch.float32)
+                data = torch.Tensor(data).transpose(0, 1)  # Transpose the tensor to (8, 5000)
+                self.X.append(data)
             else:
                 self.features_df.drop(index=index)
 
