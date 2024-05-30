@@ -16,20 +16,24 @@ import random
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # Record the start time
 start_time = time.time()
 
 from models.Inception1D import Inception1d
-from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset,SHAPE_2D
 
-INPUT_CHANNEL_8 = "input_channel_8"
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 50
+num_epochs = 1000
 train_fraction = 0.8
+
+patience = 30
+early_stopping_counter = 0
+best_val_auc_roc = 0
 
 # Set a fixed seed for reproducibility
 SEED = 42
@@ -47,7 +51,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version3_classification",
+    project="version3_classification", #    project="final_runs_by_ridma",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -56,14 +60,14 @@ wandb.init(
         "epochs": num_epochs,
         "parameter": "classification",
     },
-    notes="",
+    notes="classification no transfer learning 1 inception alone",
 )
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model
 model = Inception1d(num_classes=5, input_channels=12, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = ECGDataset(input_shape=INPUT_CHANNEL_8, num_of_leads=12)
+dataset = ECGDataset(input_shape=SHAPE_2D, num_of_leads=12)
 
 
 # Split the dataset into training and validation sets
@@ -87,6 +91,7 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size,
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for multi-class classification
+scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-5)
 
 
 for epoch in range(num_epochs):
@@ -142,6 +147,9 @@ for epoch in range(num_epochs):
     # Log metrics
     print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
     # Validation loop
+    # Update learning rate scheduler
+    scheduler.step()
+    
     model.eval()
     total_correct = 0
     total_samples = 0
@@ -186,8 +194,20 @@ for epoch in range(num_epochs):
             "train_AUC": train_auc_roc,
             "val_accuracy": val_accuracy,
             "val_AUC": val_auc_roc,
+            "lr": scheduler.get_last_lr()[0],
         }
     )
+    # Early stopping
+    if val_auc_roc > best_val_auc_roc:
+        best_val_auc_roc = val_auc_roc
+        early_stopping_counter = 0
+    else:
+        early_stopping_counter += 1
+    
+    # Check if early stopping criteria is met
+    if early_stopping_counter >= patience:
+        print(f"Early stopping at epoch {epoch}")
+        break
 
     # # Save the trained model with date and time in the path
     # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
