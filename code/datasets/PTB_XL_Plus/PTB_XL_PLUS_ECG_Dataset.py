@@ -16,8 +16,10 @@ QT_PARAMETER = "qt"
 
 
 class PTB_XL_PLUS_ECGDataset(Dataset):
-    def __init__(self, parameter=None):
+    def __init__(self, parameter=None, num_of_leads=8):
         super(PTB_XL_PLUS_ECGDataset, self).__init__()
+        
+        self.num_of_leads = num_of_leads
 
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
             raise ValueError("Invalid parameter")
@@ -76,7 +78,12 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
             if not matching_row.empty:
                 file_name_hr = matching_row["filename_hr"].values[0]
                 file_path = path_to_ptb_xl_dataset + file_name_hr
-                data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
+                if num_of_leads == 12:
+                    data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 2, 3, 4, 5,6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
+                elif num_of_leads == 8:
+                    data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
+                else:
+                    raise Exception("number of leads is wrong. It should be either 8 or 12")
                 # flattened_data = data.flatten()
 
                 # # normalization

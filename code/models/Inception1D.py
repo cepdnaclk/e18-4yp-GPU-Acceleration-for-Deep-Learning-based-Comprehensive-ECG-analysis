@@ -104,7 +104,6 @@ class Inception1d(nn.Module):
     """inception time architecture"""
 
     # (8, 5000) -> 68
-
     def __init__(self, num_classes=5, input_channels=8, kernel_size=40, depth=6, bottleneck_size=32, nb_filters=32, use_residual=True, lin_ftrs_head=None, ps_head=0.5, bn_final_head=False, bn_head=True, act_head="relu", concat_pooling=True):
         super().__init__()
         assert kernel_size >= 40
@@ -164,4 +163,22 @@ class Inception1dCombined(nn.Module):
         # x = self.layers(combined_output)
         x = self.last_inception(combined_output)
 
+        return x
+
+
+class Inception1dClassificationToRegression(nn.Module):
+    """inception time architecture"""
+
+    def __init__(self, model1):
+        super().__init__()
+
+        self.model1 = model1
+
+        self.layers = nn.Sequential(
+            nn.Linear(128, 1),
+        )
+
+    def forward(self, x):
+        model1_output = self.model1(x)
+        x = self.layers(model1_output)
         return x
