@@ -22,13 +22,13 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 start_time = time.time()
 
 from models.Inception1D import Inception1d
-from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset,SHAPE_2D
+from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset, SHAPE_2D
 
 
 # Hyperparameters
 batch_size = 32
 learning_rate = 0.01
-num_epochs = 1000
+num_epochs = 5
 train_fraction = 0.8
 
 patience = 30
@@ -51,7 +51,7 @@ if torch.cuda.is_available():
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version3_classification", #    project="final_runs_by_ridma",
+    project="version3_classification",  #    project="final_runs_by_ridma",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -149,7 +149,7 @@ for epoch in range(num_epochs):
     # Validation loop
     # Update learning rate scheduler
     scheduler.step()
-    
+
     model.eval()
     total_correct = 0
     total_samples = 0
@@ -200,20 +200,22 @@ for epoch in range(num_epochs):
     # Early stopping
     if val_auc_roc > best_val_auc_roc:
         best_val_auc_roc = val_auc_roc
+        best_model = model
         early_stopping_counter = 0
     else:
         early_stopping_counter += 1
-    
+
     # Check if early stopping criteria is met
     if early_stopping_counter >= patience:
         print(f"Early stopping at epoch {epoch}")
         break
 
-    # # Save the trained model with date and time in the path
-    # current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    # model_path = f"saved_models/{current_time}"
-    # mlflow.pytorch.save_model(model, model_path)
 
+# Save the trained model with date and time in the path
+current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = f"saved_models/{os.path.basename(__file__)}_classification_{current_time}_{wandb.run.name}"
+
+torch.save(best_model, model_path)
 print("Finished Training")
 
 
