@@ -134,6 +134,8 @@ class Inception1dCombined(nn.Module):
         self.model3 = model3
         self.model4 = model4
 
+        self.first_inception = Inception1d(num_classes=8 * 5000, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to("cuda:0")
+
         self.last_inception = Inception1d(num_classes=5, input_channels=4, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to("cuda:0")
 
         self.layers = nn.Sequential(
@@ -145,6 +147,10 @@ class Inception1dCombined(nn.Module):
         )
 
     def forward(self, x):
+        batch_size, channels, seq_len = x.size()
+        x = self.first_inception(x)
+        x = x.reshape(batch_size, channels, -1)
+
         model1_output = self.model1(x)
         model2_output = self.model2(x)
         model3_output = self.model3(x)
