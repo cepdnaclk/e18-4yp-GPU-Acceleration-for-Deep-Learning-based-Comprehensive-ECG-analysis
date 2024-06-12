@@ -66,6 +66,8 @@ class ECGDataset(Dataset):
         self.Y["diagnostic_superclass"] = self.Y.scp_codes.apply(self.aggregate_diagnostic)
         self.Y = self.Y[self.Y["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
+        # TODO: Check for NaN and drop them @Ridma
+
         # Load raw signal data
         print("loading raw data")
         self.X = self.load_raw_data()
