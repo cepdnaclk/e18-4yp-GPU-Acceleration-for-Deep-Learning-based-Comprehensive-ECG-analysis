@@ -18,7 +18,7 @@ QT_PARAMETER = "qt"
 class PTB_XL_PLUS_ECGDataset(Dataset):
     def __init__(self, parameter=None, num_of_leads=8):
         super(PTB_XL_PLUS_ECGDataset, self).__init__()
-        
+
         self.num_of_leads = num_of_leads
 
         if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
@@ -79,7 +79,7 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                 file_name_hr = matching_row["filename_hr"].values[0]
                 file_path = path_to_ptb_xl_dataset + file_name_hr
                 if num_of_leads == 12:
-                    data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 2, 3, 4, 5,6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
+                    data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
                 elif num_of_leads == 8:
                     data, _ = wfdb.rdsamp(file_path, channels=[0, 1, 6, 7, 8, 9, 10, 11])  # _ meta data from hea file is ignored
                 else:
@@ -114,6 +114,17 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         elif parameter == QT_PARAMETER:
             pr_int_series = self.features_df["PR_Int_Global"]
             self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
+
+        nan_indices = torch.isnan(self.y)
+
+        # drop the nan indices from self.x and self.y
+        self.X = self.X[~nan_indices]
+        self.y = self.y[~nan_indices]
+
+        print(self.x.shape)
+        print(self.y.shape)
+
+        quit()
 
     def __len__(self):
         return len(self.y)
