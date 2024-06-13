@@ -65,6 +65,12 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
         self.features_df.reset_index(drop=True, inplace=True)
 
+        # drop NaN records
+        columns_to_check = ["RR_Mean_Global", "QRS_Dur_Global", "QT_Int_Global", "PR_Int_Global"]
+
+        # check and drop if these columns have NaN
+        self.features_df = self.features_df.dropna(subset=columns_to_check)
+
         # is it needed to check the directory for existance of files related to filename_hr
 
         self.X = []
@@ -114,17 +120,6 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         elif parameter == QT_PARAMETER:
             pr_int_series = self.features_df["PR_Int_Global"]
             self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
-
-        nan_indices = torch.isnan(self.y)
-
-        # drop the nan indices from self.x and self.y
-        self.X = self.X[~nan_indices]
-        self.y = self.y[~nan_indices]
-
-        print(self.x.shape)
-        print(self.y.shape)
-
-        quit()
 
     def __len__(self):
         return len(self.y)
