@@ -23,13 +23,15 @@ start_time = time.time()
 
 from models.Inception1D import Inception1d
 from datasets.PTB_XL.PTB_XL_ECG_Dataset import ECGDataset, SHAPE_2D
+from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset, SUB_DATASET_A, SUB_DATASET_B
 
 
 # Hyperparameters
-batch_size = 32
+batch_size = 31
 learning_rate = 0.01
 num_epochs = 5
 train_fraction = 0.8
+select_subdataset = SUB_DATASET_A
 
 patience = 30
 early_stopping_counter = 0
@@ -53,13 +55,7 @@ wandb.init(
     # set the wandb project where this run will be logged
     project="version3_classification",  #    project="final_runs_by_ridma",
     # track hyperparameters and run metadata
-    config={
-        "learning_rate": learning_rate,
-        "architecture": os.path.basename(__file__),
-        "dataset": "PTB-XL",
-        "epochs": num_epochs,
-        "parameter": "classification",
-    },
+    config={"learning_rate": learning_rate, "architecture": os.path.basename(__file__), "dataset": "PTB-XL", "epochs": num_epochs, "parameter": "classification", "sub_dataset": select_subdataset},
     notes="classification no transfer learning 1 inception alone",
 )
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -67,7 +63,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Inception1d(num_classes=5, input_channels=12, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = ECGDataset(input_shape=SHAPE_2D, num_of_leads=12)
+dataset = PTB_XL_PLUS_ECGDataset(num_of_leads=12, sub_dataset=select_subdataset, is_classification=True)
 
 
 # Split the dataset into training and validation sets
@@ -108,7 +104,6 @@ for epoch in range(num_epochs):
     ):
         inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
-
         optimizer.zero_grad()
         outputs = model(inputs)
 

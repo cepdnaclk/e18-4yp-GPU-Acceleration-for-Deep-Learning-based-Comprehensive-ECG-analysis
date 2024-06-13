@@ -9,6 +9,7 @@ import socket
 import os
 import utils.datasets as utils_datasets
 from sklearn.model_selection import train_test_split
+import ast
 
 
 HR_PARAMETER = "hr"
@@ -21,14 +22,13 @@ SUB_DATASET_B = "B"
 
 
 class PTB_XL_PLUS_ECGDataset(Dataset):
-    def __init__(self, parameter=None, num_of_leads=8, sub_dataset=None):
+    labels = ["MI", "STTC", "HYP", "NORM", "CD"]
+
+    def __init__(self, parameter=None, num_of_leads=8, sub_dataset=None, is_classification=False):
         super(PTB_XL_PLUS_ECGDataset, self).__init__()
 
         self.num_of_leads = num_of_leads
-
-        if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
-            raise ValueError("Invalid parameter")
-
+        self.is_classification = is_classification
         hostname = socket.gethostname()
         if hostname == "ampere":
             print("Running in ampere server. Checking if data is available in ram")
@@ -78,10 +78,52 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
         # is it needed to check the directory for existance of files related to filename_hr
 
+        if is_classification:
+            self.statements_df.scp_codes = self.statements_df.scp_codes.apply(lambda x: ast.literal_eval(x))
+
+            # normalize self.X
+            # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
+
+            # Load scp_statements.csv for diagnostic aggregation
+            self.agg_df = pd.read_csv(path_to_ptb_xl_dataset + "scp_statements.csv", index_col=0)
+            self.agg_df = self.agg_df[self.agg_df.diagnostic == 1]
+
+            # Apply diagnostic superclass and add the 'diagnostic_superclass' column
+
+            self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
+            self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
+
+        else:
+
+            if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
+                raise ValueError("Invalid parameter")
+
+            if parameter == HR_PARAMETER:
+                rr_mean_global_series = self.features_df["RR_Mean_Global"]
+                hr_torch = torch.tensor(rr_mean_global_series.values, dtype=torch.float32)
+                # Calculate HR
+                self.y = 60 * 1000 / hr_torch
+
+            if parameter == QRS_PARAMETER:
+                qrs_dur_series = self.features_df["QRS_Dur_Global"]
+                self.y = torch.tensor(qrs_dur_series.values, dtype=torch.float32)
+
+            elif parameter == PR_PARAMETER:
+                qt_int_series = self.features_df["QT_Int_Global"]
+                self.y = torch.tensor(qt_int_series.values, dtype=torch.float32)
+
+            elif parameter == QT_PARAMETER:
+                pr_int_series = self.features_df["PR_Int_Global"]
+                self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
+
         self.X = []
+        if is_classification:
+            iterate_over = self.y
+        else:
+            iterate_over = self.features_df
         for index, row in tqdm(
-            self.features_df.iterrows(),
-            total=len(self.features_df),
+            iterate_over.iterrows(),
+            total=len(iterate_over),
             desc="Reading data files",
         ):
             ecg_id = row["ecg_id"]
@@ -104,37 +146,20 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                 data = torch.Tensor(data).transpose(0, 1)  # Transpose the tensor to (8, 5000)
                 self.X.append(data)
             else:
-                self.features_df.drop(index=index)
+                self.y.drop(index=index)
 
-        self.features_df.reset_index(drop=True, inplace=True)  # in case if there were no matching rows and dropped features from line no 70
-
-        if parameter == HR_PARAMETER:
-            rr_mean_global_series = self.features_df["RR_Mean_Global"]
-            hr_torch = torch.tensor(rr_mean_global_series.values, dtype=torch.float32)
-            # Calculate HR
-            self.y = 60 * 1000 / hr_torch
-
-        if parameter == QRS_PARAMETER:
-            qrs_dur_series = self.features_df["QRS_Dur_Global"]
-            self.y = torch.tensor(qrs_dur_series.values, dtype=torch.float32)
-
-        elif parameter == PR_PARAMETER:
-            qt_int_series = self.features_df["QT_Int_Global"]
-            self.y = torch.tensor(qt_int_series.values, dtype=torch.float32)
-
-        elif parameter == QT_PARAMETER:
-            pr_int_series = self.features_df["PR_Int_Global"]
-            self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
+        # self.y.reset_index(drop=True, inplace=True)
 
         # select the subset
         if sub_dataset == None:
             print("No sub dataset specified. Using the entire dataset")
         else:
             subsetA, subsetB = train_test_split(range(len(self.X)), test_size=0.5, random_state=42, shuffle=True)
-
+            print(len(self.X))
+            print(len(self.y))
             if sub_dataset == SUB_DATASET_A:
                 self.X = [self.X[i] for i in subsetA]
-                self.y = [self.y[i] for i in subsetA]
+                self.y = [self.y.iloc[i] for i in subsetA]
             elif sub_dataset == SUB_DATASET_B:
                 self.X = [self.X[i] for i in subsetB]
                 self.y = [self.y[i] for i in subsetB]
@@ -146,8 +171,22 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
     def __getitem__(self, idx):
         x = self.X[idx]
-        y = self.y[idx]
-        return x, y.reshape(-1)
+
+        if self.is_classification:
+            y = self.y[idx]["diagnostic_superclass"][0]
+            y = torch.tensor([y == i for i in self.labels], dtype=torch.float32)
+        else:
+            y = self.y[idx].reshape(-1)
+
+        return x, y
+
+    def aggregate_diagnostic(self, y_list):
+        tmp = []
+        for each_tuple in y_list:
+            each_tuple = each_tuple[0]
+            if each_tuple in self.agg_df.index:
+                tmp.append(self.agg_df.loc[each_tuple].diagnostic_class)
+        return list(set(tmp))
 
 
 if __name__ == "__main__":
