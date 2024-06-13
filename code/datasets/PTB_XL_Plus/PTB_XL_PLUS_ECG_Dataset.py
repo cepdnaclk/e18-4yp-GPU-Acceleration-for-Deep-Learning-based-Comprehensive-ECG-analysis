@@ -8,15 +8,20 @@ from tqdm import tqdm
 import socket
 import os
 import utils.datasets as utils_datasets
+from sklearn.model_selection import train_test_split
+
 
 HR_PARAMETER = "hr"
 QRS_PARAMETER = "qrs"
 PR_PARAMETER = "pr"
 QT_PARAMETER = "qt"
 
+SUB_DATASET_A = "A"
+SUB_DATASET_B = "B"
+
 
 class PTB_XL_PLUS_ECGDataset(Dataset):
-    def __init__(self, parameter=None, num_of_leads=8):
+    def __init__(self, parameter=None, num_of_leads=8, sub_dataset=None):
         super(PTB_XL_PLUS_ECGDataset, self).__init__()
 
         self.num_of_leads = num_of_leads
@@ -52,18 +57,18 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         self.statements_df = pd.read_csv(path_to_ptb_xl_plus_statements)
         self.data_file_names_df = pd.read_csv(path_to_ptb_xl_dataset + ptb_xl_file_names_database_csv)
 
-        ecg_id_s_rows_to_be_removed_not_normal = []
-        for index, row in self.statements_df.iterrows():
-            ecg_id = row["ecg_id"]
-            scp_codes = row["scp_codes"]
+        # ecg_id_s_rows_to_be_removed_not_normal = []
+        # for index, row in self.statements_df.iterrows():
+        #     ecg_id = row["ecg_id"]
+        #     scp_codes = row["scp_codes"]
 
-            if "NORM" not in scp_codes:
-                ecg_id_s_rows_to_be_removed_not_normal.append(ecg_id)
+        #     if "NORM" not in scp_codes:
+        #         ecg_id_s_rows_to_be_removed_not_normal.append(ecg_id)
 
-        rows_to_remove = self.features_df["ecg_id"].isin(ecg_id_s_rows_to_be_removed_not_normal)
-        self.features_df = self.features_df[~rows_to_remove]
+        # rows_to_remove = self.features_df["ecg_id"].isin(ecg_id_s_rows_to_be_removed_not_normal)
+        # self.features_df = self.features_df[~rows_to_remove]
 
-        self.features_df.reset_index(drop=True, inplace=True)
+        # self.features_df.reset_index(drop=True, inplace=True)
 
         # drop NaN records
         columns_to_check = ["RR_Mean_Global", "QRS_Dur_Global", "QT_Int_Global", "PR_Int_Global"]
@@ -120,6 +125,21 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         elif parameter == QT_PARAMETER:
             pr_int_series = self.features_df["PR_Int_Global"]
             self.y = torch.tensor(pr_int_series.values, dtype=torch.float32)
+
+        # select the subset
+        if sub_dataset == None:
+            print("No sub dataset specified. Using the entire dataset")
+        else:
+            subsetA, subsetB = train_test_split(range(len(self.X)), test_size=0.5, random_state=42, shuffle=True)
+
+            if sub_dataset == SUB_DATASET_A:
+                self.X = [self.X[i] for i in subsetA]
+                self.y = [self.y[i] for i in subsetA]
+            elif sub_dataset == SUB_DATASET_B:
+                self.X = [self.X[i] for i in subsetB]
+                self.y = [self.y[i] for i in subsetB]
+            else:
+                raise Exception("Invalid sub dataset. It should be either A or B")
 
     def __len__(self):
         return len(self.y)
