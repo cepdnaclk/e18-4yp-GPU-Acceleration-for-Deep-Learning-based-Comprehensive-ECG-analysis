@@ -155,8 +155,7 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
             print("No sub dataset specified. Using the entire dataset")
         else:
             subsetA, subsetB = train_test_split(range(len(self.X)), test_size=0.5, random_state=42, shuffle=True)
-            print(len(self.X))
-            print(len(self.y))
+            assert len(self.X) == len(self.y), "X and y should have the same length"
             if sub_dataset == SUB_DATASET_A:
                 self.X = [self.X[i] for i in subsetA]
                 self.y = [self.y.iloc[i] for i in subsetA]
