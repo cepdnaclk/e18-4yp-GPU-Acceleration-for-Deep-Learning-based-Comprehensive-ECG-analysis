@@ -158,10 +158,16 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
             assert len(self.X) == len(self.y), "X and y should have the same length"
             if sub_dataset == SUB_DATASET_A:
                 self.X = [self.X[i] for i in subsetA]
-                self.y = [self.y.iloc[i] for i in subsetA]
+                if is_classification:
+                    self.y = [self.y.iloc[i] for i in subsetA]
+                else:
+                    self.y = self.y[subsetA]
             elif sub_dataset == SUB_DATASET_B:
                 self.X = [self.X[i] for i in subsetB]
-                self.y = [self.y[i] for i in subsetB]
+                if is_classification:
+                    self.y = [self.y.iloc[i] for i in subsetB]
+                else:
+                    self.y = self.y[subsetB]
             else:
                 raise Exception("Invalid sub dataset. It should be either A or B")
 
