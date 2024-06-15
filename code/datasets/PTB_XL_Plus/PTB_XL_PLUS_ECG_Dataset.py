@@ -78,22 +78,25 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
         # is it needed to check the directory for existance of files related to filename_hr
 
-        if is_classification:
-            self.statements_df.scp_codes = self.statements_df.scp_codes.apply(lambda x: ast.literal_eval(x))
+        self.statements_df.scp_codes = self.statements_df.scp_codes.apply(lambda x: ast.literal_eval(x))
 
-            # normalize self.X
-            # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
+        # normalize self.X
+        # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
 
-            # Load scp_statements.csv for diagnostic aggregation
-            self.agg_df = pd.read_csv(path_to_ptb_xl_dataset + "scp_statements.csv", index_col=0)
-            self.agg_df = self.agg_df[self.agg_df.diagnostic == 1]
+        # Load scp_statements.csv for diagnostic aggregation
+        self.agg_df = pd.read_csv(path_to_ptb_xl_dataset + "scp_statements.csv", index_col=0)
+        self.agg_df = self.agg_df[self.agg_df.diagnostic == 1]
 
-            # Apply diagnostic superclass and add the 'diagnostic_superclass' column
+        # Apply diagnostic superclass and add the 'diagnostic_superclass' column
 
-            self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
-            self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
+        self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
+        self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
-        else:
+        # iterate throught self.features_df and get the 'ecg_id', remove it from self.features_df if it is not in self.y
+        self.features_df = self.features_df[self.features_df["ecg_id"].isin(self.y["ecg_id"])]
+        self.y = self.y[self.y["ecg_id"].isin(self.features_df["ecg_id"])]
+        
+        if not is_classification:
 
             if parameter not in [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]:
                 raise ValueError("Invalid parameter")
@@ -121,6 +124,7 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
             iterate_over = self.y
         else:
             iterate_over = self.features_df
+            
         for index, row in tqdm(
             iterate_over.iterrows(),
             total=len(iterate_over),
