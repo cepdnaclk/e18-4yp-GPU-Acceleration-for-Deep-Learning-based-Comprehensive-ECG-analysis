@@ -12,26 +12,25 @@ import os
 import numpy as np
 import random
 import utils.current_server as current_server
+from sklearn.model_selection import train_test_split
+from torch.optim.lr_scheduler import ExponentialLR
 
 from models.Inception1D import Inception1d
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset
 
-from datasets.deepfake_ecg.Deepfake_ECG_Dataset import CH_8_2D_MATRIX_OUTPUT_TYPE
+from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset, CH_8_2D_MATRIX_OUTPUT_TYPE
 
 from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset, HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER, SUB_DATASET_A, SUB_DATASET_B
 
-from sklearn.model_selection import train_test_split
-from torch.optim.lr_scheduler import CosineAnnealingLR
-
 # Hyperparameters
-batch_size = 32
+batch_size = 31
 learning_rate = 0.01
-num_epochs = 200  # used to be 1000 : HR was best around 500 ep
-train_fraction = 0.8
+num_epochs = 1000 
+train_fraction = 0.8       # so test fraction is 0.2
+val_fraction = 0.1         # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
 parameter = HR_PARAMETER
-select_sub_dataset = SUB_DATASET_B
+select_sub_dataset = SUB_DATASET_A
 
-patience = 30
+patience = 50
 early_stopping_counter = 0
 
 # Set a fixed seed for reproducibility
@@ -53,7 +52,7 @@ best_validation_loss = 1000000
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project="version2",
+    project="subset_regression",
     # track hyperparameters and run metadata
     config={
         "learning_rate": learning_rate,
@@ -63,7 +62,7 @@ wandb.init(
         "parameter": parameter,
         "sub_dataset": select_sub_dataset,
     },
-    notes="inception1d layers uncommented and sz=100",
+    notes="",
 )
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -71,16 +70,17 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Create the model
 model = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
-
 # Create the dataset class
 # dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=CH_8_2D_MATRIX_OUTPUT_TYPE)
-dataset = PTB_XL_PLUS_ECGDataset(parameter, sub_dataset=select_sub_dataset)
+dataset = PTB_XL_PLUS_ECGDataset(parameter, num_of_leads=8, sub_dataset=select_sub_dataset)
 
 # Split the dataset into training and validation sets
-train_indices, val_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+train_indices, test_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
+train_indices, val_indices = train_test_split(train_indices, test_size=(val_fraction/train_fraction), random_state=42, shuffle=True)
 
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
 val_dataset = torch.utils.data.Subset(dataset, val_indices)
+test_dataset = torch.utils.data.Subset(dataset, test_indices)
 
 # set num_workers
 if current_server.is_running_in_server():
@@ -93,13 +93,12 @@ else:
 # Create data loaders for training and validation
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
 # Optimizer and loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 criterion = nn.L1Loss()
-
-scheduler = CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-6)
-
+scheduler = ExponentialLR(optimizer, gamma=0.99)  # Set the gamma value for exponential decay
 
 # Training loop
 for epoch in range(num_epochs):
@@ -194,7 +193,7 @@ for epoch in range(num_epochs):
             "train_loss": train_loss / (len(train_dataloader)),
             "val_loss": val_loss / (len(val_dataloader)),
             "constant_percentage": number_of_constent_percentage,
-            "lr___": scheduler.get_last_lr()[0],
+            "lr": scheduler.get_last_lr()[0],
         }
     )
 
@@ -210,8 +209,34 @@ for epoch in range(num_epochs):
 
     # Check if early stopping criteria is met
     if early_stopping_counter >= patience:
-        print(f"********Early stopping at epoch {epoch}**********")
+        print(f"********Early stopping at epoch {epoch}********")
         break
+
+#End of traning and start of Testing
+print("Using best model for testing...")
+best_model.eval()
+test_loss = 0.0
+with torch.no_grad():
+    for i, data in tqdm(
+        enumerate(test_dataloader, 0),
+        total=len(test_dataloader),
+        desc=f"Testing",
+    ):
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        test_loss += loss.item()
+#  Log metrics
+wandb.log(
+    {
+        "test_loss": test_loss / (len(test_dataloader)),
+    }
+)
+
+print(f"Test_loss: {test_loss /  (len(test_dataloader))}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
