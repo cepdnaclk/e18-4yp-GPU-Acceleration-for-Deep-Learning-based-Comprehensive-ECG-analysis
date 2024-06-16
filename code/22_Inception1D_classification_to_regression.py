@@ -236,7 +236,7 @@ with torch.no_grad():
         inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
 
-        outputs = model(inputs)
+        outputs = best_model(inputs)
         loss = criterion(outputs, labels)
 
         test_loss += loss.item()
