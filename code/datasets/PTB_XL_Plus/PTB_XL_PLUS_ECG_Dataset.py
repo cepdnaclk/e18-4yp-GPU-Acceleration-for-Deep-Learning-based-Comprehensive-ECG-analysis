@@ -57,31 +57,12 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         self.statements_df = pd.read_csv(path_to_ptb_xl_plus_statements)
         self.data_file_names_df = pd.read_csv(path_to_ptb_xl_dataset + ptb_xl_file_names_database_csv)
 
-        # ecg_id_s_rows_to_be_removed_not_normal = []
-        # for index, row in self.statements_df.iterrows():
-        #     ecg_id = row["ecg_id"]
-        #     scp_codes = row["scp_codes"]
-
-        #     if "NORM" not in scp_codes:
-        #         ecg_id_s_rows_to_be_removed_not_normal.append(ecg_id)
-
-        # rows_to_remove = self.features_df["ecg_id"].isin(ecg_id_s_rows_to_be_removed_not_normal)
-        # self.features_df = self.features_df[~rows_to_remove]
-
-        # self.features_df.reset_index(drop=True, inplace=True)
-
-        # drop NaN records
         columns_to_check = ["RR_Mean_Global", "QRS_Dur_Global", "QT_Int_Global", "PR_Int_Global"]
-
-        # check and drop if these columns have NaN
-        self.features_df = self.features_df.dropna(subset=columns_to_check)
+        self.features_df = self.clean_dataset(self.features_df,columns_to_check)
 
         # is it needed to check the directory for existance of files related to filename_hr
 
         self.statements_df.scp_codes = self.statements_df.scp_codes.apply(lambda x: ast.literal_eval(x))
-
-        # normalize self.X
-        # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
 
         # Load scp_statements.csv for diagnostic aggregation
         self.agg_df = pd.read_csv(path_to_ptb_xl_dataset + "scp_statements.csv", index_col=0)
@@ -89,12 +70,17 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
 
         # Apply diagnostic superclass and add the 'diagnostic_superclass' column
 
+        print("Drop labels where there are more than one class for each signal...")
         self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
         self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
+        # DO NOT DROP ANY RECORDS AFTER THIS COMMENT
+        
         # iterate throught self.features_df and get the 'ecg_id', remove it from self.features_df if it is not in self.y
         self.features_df = self.features_df[self.features_df["ecg_id"].isin(self.y["ecg_id"])]
         self.y = self.y[self.y["ecg_id"].isin(self.features_df["ecg_id"])]
+        
+        
         
         if not is_classification:
 
@@ -153,6 +139,9 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                 self.y.drop(index=index)
 
         # self.y.reset_index(drop=True, inplace=True)
+        
+        # Normalizing each lead
+        self.X = self.normalize_each_lead(self.X)
 
         # select the subset
         if sub_dataset == None:
@@ -174,6 +163,45 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
                     self.y = self.y[subsetB]
             else:
                 raise Exception("Invalid sub dataset. It should be either A or B")
+            
+    def clean_dataset(self,features_df,columns_to_check):
+        print("Dataset Cleaning Started")
+        total_rows = len(features_df)
+        print(f"Total number of rows initially: {total_rows}")
+        
+        # check and drop if these columns have NaN
+        features_df = features_df.dropna(subset=columns_to_check)
+        
+        rows_dropped_na = total_rows - len(features_df)
+        print(f"Number of rows dropped because of NaN : {rows_dropped_na}")
+        
+        # Detect and remove outliers
+        threshold = 3  # Standard deviations for outlier detection
+        print("Z threshold =", threshold)
+        
+        for param in columns_to_check:
+            median = features_df[param].median()
+            std = features_df[param].std()
+            outlier_mask = np.abs(features_df[param] - median) > threshold * std
+            features_df = features_df[~outlier_mask]
+            
+        rows_dropped_outliers = total_rows - rows_dropped_na - len(features_df)
+        print(f"Number of rows dropped because of Outliers : {rows_dropped_outliers}")
+            
+        return features_df
+    
+    def normalize_each_lead(self, ecg_signals):
+        print("Normalizing each lead...")
+        normalized_X = []
+        for sample in ecg_signals:  # Iterate through each sample
+            normalized_sample = []
+            for lead in sample:  # Iterate through each lead
+                min_val = lead.min().item()
+                max_val = lead.max().item()
+                normalized_lead = (lead - min_val) / (max_val - min_val)
+                normalized_sample.append(normalized_lead)
+            normalized_X.append(torch.stack(normalized_sample))
+        return normalized_X
 
     def __len__(self):
         return len(self.y)
