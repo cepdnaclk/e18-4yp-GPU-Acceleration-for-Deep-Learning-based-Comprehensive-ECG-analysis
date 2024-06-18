@@ -74,9 +74,13 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
         self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
 
+        # DO NOT DROP ANY RECORDS AFTER THIS COMMENT
+        
         # iterate throught self.features_df and get the 'ecg_id', remove it from self.features_df if it is not in self.y
         self.features_df = self.features_df[self.features_df["ecg_id"].isin(self.y["ecg_id"])]
         self.y = self.y[self.y["ecg_id"].isin(self.features_df["ecg_id"])]
+        
+        
         
         if not is_classification:
 
