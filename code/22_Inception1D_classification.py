@@ -17,6 +17,7 @@ import random
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from torch.optim.lr_scheduler import ExponentialLR
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, fbeta_score
 
 # Record the start time
 start_time = time.time()
@@ -71,7 +72,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Inception1d(num_classes=5, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = PTB_XL_PLUS_ECGDataset(num_of_leads=8, sub_dataset=select_sub_dataset, is_classification=True)
+dataset = PTB_XL_PLUS_ECGDataset(num_of_leads=8, sub_dataset=select_sub_dataset, is_classification=True, limit_dataset_to_100=False)
 
 
 # Split the dataset into training and validation sets
@@ -141,6 +142,16 @@ for epoch in range(num_epochs):
         all_outputs.extend(outputs.detach().cpu().numpy())
         all_labels.extend(labels.cpu().numpy())
 
+    # Calculate confusion matrix
+    y_true = np.argmax(all_labels, axis=1)
+    y_pred = np.argmax(all_outputs, axis=1)
+    conf_matrix = confusion_matrix(y_true, y_pred, labels=[0, 1, 2, 3, 4])
+
+    print(f"Confusion Matrix for Train Epoch {epoch + 1}:")
+    print(conf_matrix)
+
+    train_conf_matrix_as_str = np.array2string(conf_matrix, separator=", ")
+
     # Compute accuracy
     train_accuracy = total_correct / total_samples
 
@@ -182,6 +193,16 @@ for epoch in range(num_epochs):
             all_outputs.extend(outputs.detach().cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
+        # Calculate confusion matrix
+        y_true = np.argmax(all_labels, axis=1)
+        y_pred = np.argmax(all_outputs, axis=1)
+        conf_matrix = confusion_matrix(y_true, y_pred, labels=[0, 1, 2, 3, 4])
+
+        print(f"Confusion Matrix for Val Epoch {epoch + 1}:")
+        print(conf_matrix)
+
+        val_conf_matrix_as_str = np.array2string(conf_matrix, separator=", ")
+
         # Compute accuracy
         val_accuracy = total_correct / total_samples
 
@@ -192,6 +213,7 @@ for epoch in range(num_epochs):
 
         # Log metrics
         print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+
     #  Log metrics
     wandb.log(
         {
@@ -200,6 +222,8 @@ for epoch in range(num_epochs):
             "val_accuracy": val_accuracy,
             "val_AUC": val_auc_roc,
             "lr": scheduler.get_last_lr()[0],
+            "train_confusion_matrix": train_conf_matrix_as_str,
+            "val_confusion_matrix": val_conf_matrix_as_str,
         }
     )
     # Early stopping
@@ -244,21 +268,70 @@ with torch.no_grad():
         all_outputs.extend(outputs.detach().cpu().numpy())
         all_labels.extend(labels.cpu().numpy())
 
+    # Calculate confusion matrix
+    y_true = np.argmax(all_labels, axis=1)
+    y_pred = np.argmax(all_outputs, axis=1)
+    conf_matrix = confusion_matrix(y_true, y_pred, labels=[0, 1, 2, 3, 4])
+
+    print(f"Confusion Matrix for Val Epoch {epoch + 1}:")
+    print(conf_matrix)
+
+    test_conf_matrix_as_str = np.array2string(conf_matrix, separator=", ")
+
     # Compute accuracy
     test_accuracy = total_correct / total_samples
 
     # Compute AUC-ROC
-    all_outputs = np.concatenate(all_outputs, axis=0)
-    all_labels = np.concatenate(all_labels, axis=0)
-    test_auc_roc = roc_auc_score(all_labels, all_outputs)
+    all_outputs_concat = np.concatenate(all_outputs, axis=0)
+    all_labels_concat = np.concatenate(all_labels, axis=0)
+    test_auc_roc = roc_auc_score(all_labels_concat, all_outputs_concat)
+
+    precision = precision_score(y_true, y_pred, average=None)
+
+    recall = recall_score(y_true, y_pred, average=None)
+
+    f1 = f1_score(y_true, y_pred, average=None)
+
+    f0_5 = fbeta_score(y_true, y_pred, beta=0.5, average=None)
+
+    f2 = fbeta_score(y_true, y_pred, beta=2, average=None)
 
     # Log metrics
     print(f"test_accuracy: {test_accuracy}, test_auc_roc: {test_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
+
+
 #  Log metrics
 wandb.log(
     {
         "test_accuracy": test_accuracy,
         "test_AUC": test_auc_roc,
+        "test_confusion_matrix": test_conf_matrix_as_str,
+        "confusion_matix": wandb.sklearn.plot_confusion_matrix(y_true, y_pred, dataset.labels),
+        "precision_label0": precision[0],
+        "precision_label1": precision[1],
+        "precision_label2": precision[2],
+        "precision_label3": precision[3],
+        "precision_label4": precision[4],
+        "recall_label0": recall[0],
+        "recall_label1": recall[1],
+        "recall_label2": recall[2],
+        "recall_label3": recall[3],
+        "recall_label4": recall[4],
+        "f1_label0": f1[0],
+        "f1_label1": f1[1],
+        "f1_label2": f1[2],
+        "f1_label3": f1[3],
+        "f1_label4": f1[4],
+        "f0_5_label0": f0_5[0],
+        "f0_5_label1": f0_5[1],
+        "f0_5_label2": f0_5[2],
+        "f0_5_label3": f0_5[3],
+        "f0_5_label4": f0_5[4],
+        "f2_label0": f2[0],
+        "f2_label1": f2[1],
+        "f2_label2": f2[2],
+        "f2_label3": f2[3],
+        "f2_label4": f2[4]
     }
 )
 
