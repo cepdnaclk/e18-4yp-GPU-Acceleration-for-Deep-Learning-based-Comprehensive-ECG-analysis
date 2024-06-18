@@ -72,12 +72,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Inception1d(num_classes=5, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
 # Create the dataset class
-dataset = PTB_XL_PLUS_ECGDataset(num_of_leads=8, sub_dataset=select_sub_dataset, is_classification=True, limit_dataset_to_100=False)
+dataset = PTB_XL_PLUS_ECGDataset(num_of_leads=8, sub_dataset=select_sub_dataset, is_classification=True, limit_dataset_for_testing=False)
 
 
 # Split the dataset into training and validation sets
 train_indices, test_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
-train_indices, val_indices = train_test_split(train_indices, test_size=(val_fraction/train_fraction), random_state=42, shuffle=True)
+train_indices, val_indices = train_test_split(train_indices, test_size=(val_fraction / train_fraction), random_state=42, shuffle=True)
 
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
 val_dataset = torch.utils.data.Subset(dataset, val_indices)
@@ -156,9 +156,11 @@ for epoch in range(num_epochs):
     train_accuracy = total_correct / total_samples
 
     # Compute AUC-ROC
-    all_outputs = np.concatenate(all_outputs, axis=0)
-    all_labels = np.concatenate(all_labels, axis=0)
-    train_auc_roc = roc_auc_score(all_labels, all_outputs)
+    all_outputs = np.array(all_outputs)
+    all_outputs = np.exp(all_outputs) / np.sum(np.exp(all_outputs), axis=1).reshape(-1, 1)
+
+    # all_labels = np.concatenate(all_labels, axis=0)
+    train_auc_roc = roc_auc_score(y_true, all_outputs, multi_class="ovr")
 
     # Log metrics
     print(f"Epoch: {epoch} train_accuracy: {train_accuracy}, train_auc_roc: {train_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
@@ -207,9 +209,10 @@ for epoch in range(num_epochs):
         val_accuracy = total_correct / total_samples
 
         # Compute AUC-ROC
-        all_outputs = np.concatenate(all_outputs, axis=0)
-        all_labels = np.concatenate(all_labels, axis=0)
-        val_auc_roc = roc_auc_score(all_labels, all_outputs)
+        all_outputs = np.array(all_outputs)
+        all_outputs = np.exp(all_outputs) / np.sum(np.exp(all_outputs), axis=1).reshape(-1, 1)
+
+        val_auc_roc = roc_auc_score(y_true, all_outputs, multi_class="ovr")
 
         # Log metrics
         print(f"Epoch: {epoch} val_accuracy: {val_accuracy}, val_auc_roc: {val_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
@@ -239,7 +242,7 @@ for epoch in range(num_epochs):
         print(f"********Early stopping at epoch {epoch}********")
         break
 
-#end of trainging Start of Testing
+# end of trainging Start of Testing
 print("Using best model for Testing...")
 best_model.eval()
 total_correct = 0
@@ -282,9 +285,11 @@ with torch.no_grad():
     test_accuracy = total_correct / total_samples
 
     # Compute AUC-ROC
-    all_outputs_concat = np.concatenate(all_outputs, axis=0)
-    all_labels_concat = np.concatenate(all_labels, axis=0)
-    test_auc_roc = roc_auc_score(all_labels_concat, all_outputs_concat)
+    all_outputs_concat = np.array(all_outputs)
+    # all_labels_concat = np.array(all_labels)
+    # do softmax on all_outputs_concat row wise
+    all_outputs_concat = np.exp(all_outputs_concat) / np.sum(np.exp(all_outputs_concat), axis=1).reshape(-1, 1)
+    test_auc_roc = roc_auc_score(y_true, all_outputs_concat, multi_class="ovr")
 
     precision = precision_score(y_true, y_pred, average=None)
 

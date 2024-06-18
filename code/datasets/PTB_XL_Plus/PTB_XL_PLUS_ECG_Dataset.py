@@ -24,7 +24,7 @@ SUB_DATASET_B = "B"
 class PTB_XL_PLUS_ECGDataset(Dataset):
     labels = ["MI", "STTC", "HYP", "NORM", "CD"]
 
-    def __init__(self, parameter=None, num_of_leads=8, sub_dataset=None, is_classification=False, limit_dataset_to_100=False):
+    def __init__(self, parameter=None, num_of_leads=8, sub_dataset=None, is_classification=False, limit_dataset_for_testing=False):
         super(PTB_XL_PLUS_ECGDataset, self).__init__()
 
         self.num_of_leads = num_of_leads
@@ -74,9 +74,9 @@ class PTB_XL_PLUS_ECGDataset(Dataset):
         self.statements_df["diagnostic_superclass"] = self.statements_df.scp_codes.apply(self.aggregate_diagnostic)
         self.y = self.statements_df[self.statements_df["diagnostic_superclass"].apply(lambda x: len(x) == 1)]
         
-        if limit_dataset_to_100:
+        if limit_dataset_for_testing:
             print("Limiting the dataset to 100 samples")
-            self.y = self.y.head(100)
+            self.y = self.y.head(1000)
 
         # DO NOT DROP ANY RECORDS AFTER THIS COMMENT
         
