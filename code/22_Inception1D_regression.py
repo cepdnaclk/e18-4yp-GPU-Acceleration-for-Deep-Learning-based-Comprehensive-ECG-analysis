@@ -14,6 +14,7 @@ import random
 import utils.current_server as current_server
 from sklearn.model_selection import train_test_split
 from torch.optim.lr_scheduler import ExponentialLR
+from sklearn.metrics import r2_score
 
 from models.Inception1D import Inception1d
 
@@ -24,9 +25,9 @@ from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset,
 # Hyperparameters
 batch_size = 31
 learning_rate = 0.01
-num_epochs = 1000 
-train_fraction = 0.8       # so test fraction is 0.2
-val_fraction = 0.1         # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
+num_epochs = 1000
+train_fraction = 0.8  # so test fraction is 0.2
+val_fraction = 0.1  # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
 parameter = HR_PARAMETER
 select_sub_dataset = SUB_DATASET_A
 
@@ -76,7 +77,7 @@ dataset = PTB_XL_PLUS_ECGDataset(parameter, num_of_leads=8, sub_dataset=select_s
 
 # Split the dataset into training and validation sets
 train_indices, test_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
-train_indices, val_indices = train_test_split(train_indices, test_size=(val_fraction/train_fraction), random_state=42, shuffle=True)
+train_indices, val_indices = train_test_split(train_indices, test_size=(val_fraction / train_fraction), random_state=42, shuffle=True)
 
 train_dataset = torch.utils.data.Subset(dataset, train_indices)
 val_dataset = torch.utils.data.Subset(dataset, val_indices)
@@ -212,10 +213,12 @@ for epoch in range(num_epochs):
         print(f"********Early stopping at epoch {epoch}********")
         break
 
-#End of traning and start of Testing
+# End of traning and start of Testing
 print("Using best model for testing...")
 best_model.eval()
-test_loss = 0.0
+mae = 0.0
+all_labels = []
+all_outputs = []
 with torch.no_grad():
     for i, data in tqdm(
         enumerate(test_dataloader, 0),
@@ -228,15 +231,51 @@ with torch.no_grad():
         outputs = best_model(inputs)
         loss = criterion(outputs, labels)
 
-        test_loss += loss.item()
+        mae += loss.item()
+
+        all_labels.extend(labels.cpu().numpy())
+        all_outputs.extend(outputs.cpu().numpy())
+
+# calculate MSE from all_labels and all_outputs
+mse = np.square(np.subtract(all_labels, all_outputs)).mean()
+# rmse
+rmse = np.sqrt(mse)
+# mape
+mape = np.mean(np.abs((all_labels - all_outputs) / all_labels)) * 100
+
+# r^2
+r_squared = r2_score(all_labels, all_outputs)
+
+# adjusted R^2
+n = len(all_labels)
+p = 1
+adjusted_r_squared = 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
+
+# median AE
+median_ae = np.median(np.abs(all_labels - all_outputs))
+
+# rmsle
+rmsle = np.sqrt(np.mean(np.power(np.log1p(all_labels) - np.log1p(all_outputs), 2)))
+
+# explained var
+explained_var = 1 - np.var(all_labels - all_outputs) / np.var(all_labels)
+
 #  Log metrics
 wandb.log(
     {
-        "test_loss": test_loss / (len(test_dataloader)),
+        "test_mae": mae / (len(test_dataloader)),
+        "test_mse": mse,
+        "test_rmse": rmse,
+        "test_mape": mape,
+        "test_r_squared": r_squared,
+        "test_adjusted_r_squared": adjusted_r_squared,
+        "test_median_ae": median_ae,
+        "test_rmsle": rmsle,
+        "test_explained_var": explained_var,
     }
 )
 
-print(f"Test_loss: {test_loss /  (len(test_dataloader))}")
+print(f"Test_loss: {mae /  (len(test_dataloader))}")
 
 # Save the trained model with date and time in the path
 current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
