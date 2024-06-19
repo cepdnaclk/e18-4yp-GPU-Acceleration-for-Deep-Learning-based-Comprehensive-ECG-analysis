@@ -236,6 +236,10 @@ with torch.no_grad():
         all_labels.extend(labels.cpu().numpy())
         all_outputs.extend(outputs.cpu().numpy())
 
+# Convert lists to numpy arrays
+all_labels = np.array(all_labels)
+all_outputs = np.array(all_outputs)
+
 # calculate MSE from all_labels and all_outputs
 mse = np.square(np.subtract(all_labels, all_outputs)).mean()
 # rmse
