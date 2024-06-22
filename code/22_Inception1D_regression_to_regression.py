@@ -321,6 +321,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
     except Exception as e:
         logging.error(f"Error in {source_model_name} A:{parameter}>>to>>B:{parameter} and the error is {e}")
         try:
-            wandb.run.mark_crashed()
+            wandb.finish(-1)
         except:
             logging.error(f"Error when tring to mark the wandb as crashed")
+            quit()
