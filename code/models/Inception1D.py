@@ -182,3 +182,20 @@ class Inception1dClassificationToRegression(nn.Module):
         model1_output = self.model1(x)
         x = self.layers(model1_output)
         return x
+    
+class Inception1dRegressionToClassification(nn.Module):
+    """inception time architecture"""
+
+    def __init__(self, model1):
+        super().__init__()
+
+        self.model1 = model1
+
+        self.layers = nn.Sequential(
+            nn.Linear(128, 5),
+        )
+
+    def forward(self, x):
+        model1_output = self.model1(x)
+        x = self.layers(model1_output)
+        return x
