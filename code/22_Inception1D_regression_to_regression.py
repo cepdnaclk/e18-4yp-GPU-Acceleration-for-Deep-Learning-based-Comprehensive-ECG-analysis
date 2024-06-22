@@ -11,11 +11,11 @@ import wandb
 import os
 import numpy as np
 import random
-import logging
 import utils.current_server as current_server
 from sklearn.model_selection import train_test_split
 from torch.optim.lr_scheduler import ExponentialLR
 from sklearn.metrics import r2_score
+import logging
 
 from models.Inception1D import Inception1d
 
@@ -318,9 +318,9 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
         print("Finished Training")
         logging.info(f"Finished Traning of transfer learning {source_model_name} A:{parameter}>>to>>B:{parameter}")
         wandb.finish()
-    except:
-        logging.error(f"Error in {source_model_name} A:{parameter}>>to>>B:{parameter}")
+    except Exception as e:
+        logging.error(f"Error in {source_model_name} A:{parameter}>>to>>B:{parameter} and the error is {e}")
         try:
-            wandb.finish()
+            wandb.run.mark_crashed()
         except:
-            logging.error(f"Error when tring to finish wandb")
+            logging.error(f"Error when tring to mark the wandb as crashed")
