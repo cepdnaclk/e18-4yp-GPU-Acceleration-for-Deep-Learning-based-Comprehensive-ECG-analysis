@@ -64,22 +64,22 @@ for each_parameter in parameters:
             config={
                 "learning_rate": learning_rate,
                 "architecture": os.path.basename(__file__),
-                "dataset": "PTB XL PLUS",
+                "dataset": "Deepfake",
                 "epochs": num_epochs,
                 "parameter": parameter,
                 "sub_dataset": select_sub_dataset,
             },
-            notes="",
+            notes="deepfake, subset A = subset B = total dataset",
         )
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
         # Create the model
         model = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
 
         # Create the dataset class
-        # dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=CH_8_2D_MATRIX_OUTPUT_TYPE)
-        dataset = PTB_XL_PLUS_ECGDataset(parameter, num_of_leads=8, sub_dataset=select_sub_dataset)
+        dataset = Deepfake_ECG_Dataset(parameter=parameter, output_type=CH_8_2D_MATRIX_OUTPUT_TYPE)
+        # dataset = PTB_XL_PLUS_ECGDataset(parameter, num_of_leads=8, sub_dataset=select_sub_dataset)
 
         # Split the dataset into training and validation sets
         train_indices, test_indices = train_test_split(range(len(dataset)), test_size=1 - train_fraction, random_state=42, shuffle=True)
