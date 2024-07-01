@@ -33,7 +33,7 @@ logging.basicConfig(
     level=logging.DEBUG  # Log level (can be DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
-SAVED_MODEL_PATHS = ["22_Inception1D_regression.py_qrs_20240629_164840_wild-feather-61"]
+SAVED_MODEL_PATHS = ["saved_models/22_Inception1D_regression.py_qrs_20240629_164840_wild-feather-61"]
                     #  "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
                     #  "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
                     #  "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"]
