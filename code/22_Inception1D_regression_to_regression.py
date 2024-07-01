@@ -24,18 +24,19 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset, CH_
 from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset, HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER, SUB_DATASET_A, SUB_DATASET_B
 
 logging.basicConfig(
-    filename='log_regression_to_regression.log',  # Log file name
-    filemode='a',        # Append mode (use 'w' for overwrite mode)
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Log format
-    level=logging.DEBUG  # Log level (can be DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    filename="log_regression_to_regression.log",  # Log file name
+    filemode="a",  # Append mode (use 'w' for overwrite mode)
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Log format
+    level=logging.DEBUG,  # Log level (can be DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
-SAVED_MODEL_PATHS = ["saved_models/22_Inception1D_regression.py_hr_20240620_074721_driven-night-43",
-                     "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
-                     "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
-                     "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"]
+SAVED_MODEL_PATHS = ["saved_models/22_Inception1D_regression.py_hr_20240628_143440_chocolate-grass-56"]
+#  "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
+#  "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
+#  "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"
 
-PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
+
+PARAMETER_ORDER_LIST = [HR_PARAMETER]
 
 for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_ORDER_LIST):
     # Hyperparameters
@@ -65,8 +66,8 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
 
     best_model = None
     best_validation_loss = 1000000
-    
-    source_model_name = current_model_path.split('_')[-1]
+
+    source_model_name = current_model_path.split("_")[-1]
 
     # start a new wandb run to track this script
     wandb.init(
@@ -81,7 +82,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
             "parameter": parameter,
             "sub_dataset": select_sub_dataset,
         },
-        notes=f"4# freeze 1-7 out of 56 using {source_model_name} A:{parameter}>>to>>B:{parameter}",
+        notes=f"not frozen, Transfer learning from deepfake HR to ptbxl subsetB HR",
     )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -91,12 +92,12 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
     model = torch.load(current_model_path, map_location="cuda:0")
 
     # Freeze the first 7 layers of the model # 42 is based on the manual inspection of the model architecture
-    count=0
-    for param in model.parameters():
-        param.requires_grad = False
-        count+=1
-        if(count>=7):
-            break
+    # count = 0
+    # for param in model.parameters():
+    #     param.requires_grad = False
+    #     count += 1
+    #     if count >= 7:
+    #         break
 
     # Create the dataset class
     dataset = PTB_XL_PLUS_ECGDataset(parameter, num_of_leads=8, sub_dataset=select_sub_dataset)

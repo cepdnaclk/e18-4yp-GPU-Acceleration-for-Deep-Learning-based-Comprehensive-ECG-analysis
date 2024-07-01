@@ -33,12 +33,13 @@ logging.basicConfig(
     level=logging.DEBUG  # Log level (can be DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
-SAVED_MODEL_PATHS = ["saved_models/22_Inception1D_regression.py_hr_20240620_074721_driven-night-43",
-                     "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
-                     "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
-                     "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"]
+SAVED_MODEL_PATHS = ["22_Inception1D_regression.py_qrs_20240629_164840_wild-feather-61"]
+                    #  "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
+                    #  "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
+                    #  "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"]
 
-PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
+# PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
+PARAMETER_ORDER_LIST = [QRS_PARAMETER]
 
 for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_ORDER_LIST):
     # Hyperparameters

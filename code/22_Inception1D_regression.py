@@ -22,7 +22,7 @@ from datasets.deepfake_ecg.Deepfake_ECG_Dataset import Deepfake_ECG_Dataset, CH_
 
 from datasets.PTB_XL_Plus.PTB_XL_PLUS_ECG_Dataset import PTB_XL_PLUS_ECGDataset, HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER, SUB_DATASET_A, SUB_DATASET_B
 
-parameters = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
+parameters = [ PR_PARAMETER, QT_PARAMETER]
 subsets = [SUB_DATASET_A, SUB_DATASET_B]
 
 for each_parameter in parameters:
@@ -72,7 +72,7 @@ for each_parameter in parameters:
             notes="deepfake, subset A = subset B = total dataset",
         )
 
-        device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Create the model
         model = Inception1d(num_classes=1, input_channels=8, use_residual=True, ps_head=0.5, lin_ftrs_head=[128], kernel_size=40).to(device)
