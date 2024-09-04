@@ -33,21 +33,22 @@ logging.basicConfig(
     level=logging.DEBUG  # Log level (can be DEBUG, INFO, WARNING, ERROR, CRITICAL)
 )
 
-SAVED_MODEL_PATHS = ["saved_models/22_Inception1D_regression.py_qrs_20240629_164840_wild-feather-61"]
-                    #  "saved_models/22_Inception1D_regression.py_qrs_20240620_095236_proud-shape-45",
-                    #  "saved_models/22_Inception1D_regression.py_pr_20240620_112517_distinctive-violet-47",
-                    #  "saved_models/22_Inception1D_regression.py_qt_20240620_130354_giddy-night-49"]
+SAVED_MODEL_PATHS = [
+    "saved_models/22_Inception1D_regression.py_hr_20240724_103005_solar-wood-80",
+    "saved_models/22_Inception1D_regression.py_qrs_20240724_220543_crimson-surf-81",
+    "saved_models/22_Inception1D_regression.py_pr_20240725_130507_stellar-puddle-82",
+    "saved_models/22_Inception1D_regression.py_qt_20240726_132159_vibrant-puddle-83",
+]
 
-# PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
-PARAMETER_ORDER_LIST = [QRS_PARAMETER]
+PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
 
 for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_ORDER_LIST):
     # Hyperparameters
     batch_size = 31
     learning_rate = 0.01
-    num_epochs = 1000
-    train_fraction = 0.8       # so test fraction is 0.2
-    val_fraction = 0.1         # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
+    num_epochs = 9
+    train_fraction = 0.8  # so test fraction is 0.2
+    val_fraction = 0.1  # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
     select_sub_dataset = SUB_DATASET_B
 
     patience = 50
@@ -175,9 +176,12 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
                 total_correct += (predicted == labels_max).sum().item()
                 total_samples += labels.size(0)
 
-                # Store outputs and labels for AUC-ROC calculation
-                all_outputs.extend(outputs.detach().cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
+                try:
+                    # Store outputs and labels for AUC-ROC calculation
+                    all_outputs.extend(outputs.detach().cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
+                except:
+                    pass
 
             # Calculate confusion matrix
             y_true = np.argmax(all_labels, axis=1)
@@ -228,9 +232,12 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
                     total_correct += (predicted == labels_max).sum().item()
                     total_samples += labels.size(0)
 
-                    # Store outputs and labels for AUC-ROC calculation
-                    all_outputs.extend(outputs.detach().cpu().numpy())
-                    all_labels.extend(labels.cpu().numpy())
+                    try:
+                        # Store outputs and labels for AUC-ROC calculation
+                        all_outputs.extend(outputs.detach().cpu().numpy())
+                        all_labels.extend(labels.cpu().numpy())
+                    except:
+                        pass
 
                 # Calculate confusion matrix
                 y_true = np.argmax(all_labels, axis=1)
@@ -304,10 +311,12 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
                 total_correct += (predicted == labels_max).sum().item()
                 total_samples += labels.size(0)
 
-                # Store outputs and labels for AUC-ROC calculation
-                all_outputs.extend(outputs.detach().cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
-
+                try:
+                    # Store outputs and labels for AUC-ROC calculation
+                    all_outputs.extend(outputs.detach().cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
+                except:
+                    pass
             # Calculate confusion matrix
             y_true = np.argmax(all_labels, axis=1)
             y_pred = np.argmax(all_outputs, axis=1)
@@ -341,7 +350,6 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
             # Log metrics
             print(f"test_accuracy: {test_accuracy}, test_auc_roc: {test_auc_roc}, total_correct: {total_correct}, total_samples: {total_samples}")
 
-
         #  Log metrics
         wandb.log(
             {
@@ -373,7 +381,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
                 "f2_label1": f2[1],
                 "f2_label2": f2[2],
                 "f2_label3": f2[3],
-                "f2_label4": f2[4]
+                "f2_label4": f2[4],
             }
         )
 
@@ -387,6 +395,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
         logging.info(f"Ending transfer learning of {source_model_name} A:{current_parameter}>>to>>B:classification")
     except Exception as e:
         logging.error(f"Error in # and and the error is :{e}")
+        print(f"Error in # and and the error is :{e}")
         try:
             wandb.finish(-1)
         except:
