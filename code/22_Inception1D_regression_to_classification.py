@@ -34,19 +34,19 @@ logging.basicConfig(
 )
 
 SAVED_MODEL_PATHS = [
-    "saved_models/22_Inception1D_regression.py_hr_20240724_103005_solar-wood-80",
+    "saved_models/22_Inception1D_regression.py_hr_20240905_211535_snowy-cherry-2",
     "saved_models/22_Inception1D_regression.py_qrs_20240724_220543_crimson-surf-81",
     "saved_models/22_Inception1D_regression.py_pr_20240725_130507_stellar-puddle-82",
-    "saved_models/22_Inception1D_regression.py_qt_20240726_132159_vibrant-puddle-83",
+    "saved_models/22_Inception1D_regression.py_qt_20240905_232817_gentle-universe-3",
 ]
 
-PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER]
+PARAMETER_ORDER_LIST = [HR_PARAMETER, QRS_PARAMETER, PR_PARAMETER, QT_PARAMETER ]
 
 for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_ORDER_LIST):
     # Hyperparameters
     batch_size = 31
     learning_rate = 0.01
-    num_epochs = 9
+    num_epochs = 1000
     train_fraction = 0.8  # so test fraction is 0.2
     val_fraction = 0.1  # val fraction is 0.1 out of the total dataset | 0.125 out of train fraction
     select_sub_dataset = SUB_DATASET_B
@@ -73,7 +73,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
     # start a new wandb run to track this script
     wandb.init(
         # set the wandb project where this run will be logged
-        project="subset_regression_to_classification", 
+        project="deepfake_regression_to_ptbxl_classification", 
         # track hyperparameters and run metadata
         config={
             "learning_rate": learning_rate,
@@ -83,7 +83,7 @@ for current_model_path, current_parameter in zip(SAVED_MODEL_PATHS, PARAMETER_OR
             "parameter": current_parameter,
             "sub_dataset": select_sub_dataset
         },
-        notes=f"transfer learning from {current_parameter} : based on {source_model_name} to classification  at: {current_time}",
+        notes=f"frozen 1-7 transfer learning from {current_parameter} : based on {source_model_name} to classification  at: {current_time}",
     )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
