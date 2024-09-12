@@ -67,8 +67,29 @@ Our project builds upon these foundational insights, aiming to address some of t
 ## Methodology
 
 ## Experiment Setup and Implementation
+
+The **PTB-XL** dataset, curated by the PhysioNet community, is a large and widely recognized resource for electrocardiogram (ECG) analysis. It contains 21,837 clinical ECG records collected from 18,885 patients. Each record is a 10-second, 12-lead ECG sampled at 500 Hz. The dataset is accompanied by extensive metadata, including patient demographics and diagnostic labels, which fall into five primary categories:
+
+- **NORM** (Normal ECG)
+- **CD** (Myocardial Infarction)
+- **STTC** (ST/T Changes)
+- **MI** (Conduction Disturbance)
+- **HYP** (Hypertrophy)
+
+For the experiments in this project, 8 of the 12 leads were used to ensure compatibility with synthetic ECG data in the transfer learning process. These leads include: Lead I, Lead II, V1, V2, V3, V4, V5, and V6.
+
+The PTB-XL dataset was preprocessed to remove noise and clean the data. Only ECG signals with a single class label (from the 5-class set) were used for classification. The dataset was then divided into two subsets, **PTB-XL-A** and **PTB-XL-B**, ensuring balanced representation of the five diagnostic categories in both sets.
+<div align="center">
+<img width="1680" alt="data_dis" src="https://github.com/user-attachments/assets/023f53b5-373f-4999-9ba6-cfe0b9884dba">
+</div>
+
 <p align="justify">
 As the first step, multiple experiments were run to find out the most suitable model architecture to be used for the transfer learning task. For that different architectures were tested out on the Deepfake dataset as well as the PTB-XL dataset to figure out a model performing well on both regression as well as classification on ECG signals. </p>
+
+The model architecture of the selected 1D-CNN is as below.
+<div align="center">
+<img width="805" alt="model_archi" src="https://github.com/user-attachments/assets/16515688-467c-46d2-bbad-3f2ad7b3115b">
+</div>
 
 <p align="justify">
 After the model selection was done, all the following experiments were run using that model architecture. Prior to any transfer learning, baseline resutls were obtained for the PTB-XL five class classification task. Then the transfer learning approach was divided into two sections.  </p>
@@ -83,7 +104,7 @@ All the implementation was done using pytorch framework in python. For the first
 
 ## Results and Analysis
 
-<!--
+
 A series of experiments were conducted to identify the optimal model for both regression and classification tasks on ECG signals. Different model architectures were evaluated: RNN, LSTM, CNN,  ViT, and 1D-CNN.
 
 For regression, **1D-CNN** demonstrated superior performance, particularly with the lowest Mean Absolute Error (MAE) across multiple ECG parameters (HR, QRS, PR, QT). The performance of all models is summarized in Table 1.
@@ -93,9 +114,9 @@ For regression, **1D-CNN** demonstrated superior performance, particularly with 
     
 | Model               | HR (Train MAE / Val MAE) | QRS (Train MAE / Val MAE) | PR (Train MAE / Val MAE) | QT (Train MAE / Val MAE) |
 |---------------------|--------------------------|----------------------------|--------------------------|--------------------------|
-| **RNN**             | 0.608 / 0.669            | 0.219 / 0.214              | -                        | -                        |
-| **LSTM**            | 1.452 / 1.416            | 6.819 / 6.896              | 13.504 / 13.536          | 13.892                   |
-| **CNN**             | 5.875 / 5.870            | 7.002 / 6.872              | -                        | -                        |
+| **RNN**             | 0.608 / 0.669            | 0.219 / 0.214              | 13.489 / 13.403          | 16.243 / 16.494          |
+| **LSTM**            | 1.452 / 1.416            | 6.819 / 6.896              | 13.504 / 13.536          | 13.892 / 13.892          |
+| **CNN**             | 5.875 / 5.870            | 7.002 / 6.872              | 13.496 / 13.418          | 16.239 / 16.378          |
 | **ViT**             | 5.975 / 5.869            | 7.979 / 7.930              | 23.819 / 24.012          | 17.320 / 16.817          |
 | **1D-CNN**          | 1.237 / 0.706            | 3.259 / 3.007              | 5.801 / 5.110            | 6.351 / 4.130            |
 
@@ -120,7 +141,7 @@ For classification, the **1D-CNN** again outperformed other models, achieving th
 ### Transfer Learning within PTB-XL Dataset
 
 Following the model selection, transfer learning was applied using the **1D-CNN** model to improve classification performance. Transfer learning was first applied between subsets of the PTB-XL dataset, where models were initially trained on ECG parameters (HR, QRS, PR, QT) and then transferred for classification tasks. The results are summarized in Table 3.
-
+<!--
 #### Table 3: Transfer Learning Results (PTB-XL)
 
 <div align="center">
