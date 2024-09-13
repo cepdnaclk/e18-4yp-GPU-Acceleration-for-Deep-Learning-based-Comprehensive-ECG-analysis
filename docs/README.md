@@ -65,6 +65,18 @@ Our project builds upon these foundational insights, aiming to address some of t
 
 
 ## Methodology
+The study employed two primary datasets: the PTB-XL dataset, containing 21,837 real 12-lead ECG records from 18,885 patients, and a DeepFake ECG dataset of synthetically generated signals. The PTB-XL dataset was preprocessed and divided into two subsets (PTB-XL-A and PTB-XL-B) for transfer learning experiments.
+For both classification and regression tasks, a 1D Convolutional Neural Network (1D-CNN) model was used after comparing performance with other architectures. The classification task involved categorizing ECG signals into five diagnostic categories, while the regression task focused on predicting four key ECG parameters: Heart Rate (HR), PR interval, QT interval, and QRS complex.
+Data preprocessing included normalization and splitting into train (70%), validation (10%), and test (20%) sets. Data augmentation techniques were applied to enhance model robustness. The models were trained using the Adam optimizer with a learning rate scheduler. For classification, a categorical cross-entropy loss function was used, while Mean Absolute Error (MAE) was employed for regression.
+Performance evaluation used Area Under the Curve (AUC) for classification tasks and MAE for regression tasks. Hyperparameter tuning and regularization techniques were applied to optimize model performance and prevent overfitting.
+The transfer learning process involved two approaches:
+
+1. Combining all four regression models into a single classification model 
+2. Using only the QRS regression model for transfer learning
+
+These approaches were first tested within the PTB-XL dataset subsets, then extended to transfer learning from the DeepFake dataset to the PTB-XL dataset. This process aimed to leverage knowledge gained from regression tasks to improve classification performance and to test the effectiveness of using synthetic data for training models applicable to real-world scenarios.
+The implementation utilized the PyTorch library and leveraged GPU acceleration to expedite the training process, allowing for quicker iterations and more extensive hyperparameter searches.
+
 
 ## Experiment Setup and Implementation
 
@@ -80,7 +92,7 @@ For the experiments in this project, 8 of the 12 leads were used to ensure compa
 
 The PTB-XL dataset was preprocessed to remove noise and clean the data. Only ECG signals with a single class label (from the 5-class set) were used for classification. The dataset was then divided into two subsets, **PTB-XL-A** and **PTB-XL-B**, ensuring balanced representation of the five diagnostic categories in both sets.
 <div align="center">
-<img width="1680" alt="data_dis" src="https://github.com/user-attachments/assets/023f53b5-373f-4999-9ba6-cfe0b9884dba">
+<img width="1678" alt="data_dis_" src="https://github.com/user-attachments/assets/a5fff096-bca9-4529-b91c-32b1703db713">
 </div>
 
 <p align="justify">
@@ -101,6 +113,11 @@ After the model selection was done, all the following experiments were run using
 Transfer learning within the same dataset was tried out to test the feasibility of the methodology of transfer learning from regression to classification, and after that the main research question; using synthetic ECG signals to pretrain a ML model and then use that to classify diseases on a realdataset was tested.</p>
 
 All the implementation was done using pytorch framework in python. For the first part, different model architectures, namely RNN, CNN, LSTM, VIT and 1D-CNN were tried out to find a suitable model architecture for the task. 
+
+When the models were trained to predict values such as HR, QRS, PR and QT and then to classify the diseases, the model layout has to be changed in order to support the classification task. Image down below shows the changes done in the model architecture to support classification and regression tasks.
+<div align="center">
+<img width="535" alt="Screenshot 2024-09-12 at 12 19 35 AM" src="https://github.com/user-attachments/assets/772fc264-3fdd-4954-a54f-e9e7262d7e42">
+</div>
 
 ## Results and Analysis
 
@@ -138,20 +155,8 @@ For classification, the **1D-CNN** again outperformed other models, achieving th
 
 </div>
 
-#### Transfer Learning within PTB-XL Dataset
-
-Following the model selection, transfer learning was applied using the **1D-CNN** model to improve classification performance. Transfer learning was first applied between subsets of the PTB-XL dataset, where models were initially trained on ECG parameters (HR, QRS, PR, QT) and then transferred for classification tasks. The results are summarized in Table 3.
-
 ## Conclusion 
-
-## Publications
-[//]: # "Note: Uncomment each once you uploaded the files to the repository" 
-
- 1. [Semester 7 report](./) 
- 2. [Semester 7 slides](./) 
- 3. [Semester 8 report](./) 
- 4. [Semester 8 slides](./)
- 5. Author 1, Author 2 and Author 3 "Research paper title" (2021). [PDF](./). 
+This study explores the use of deep learning, particularly 1D Convolutional Neural Networks (1D-CNN), for ECG signal analysis, focusing on both regression tasks (predicting ECG parameters) and classification tasks (diagnosing cardiac conditions). The research utilizes the PTB-XL dataset for real ECG data and a DeepFake ECG dataset for synthetic data, implementing transfer learning techniques within the PTB-XL dataset and from synthetic to real data. Key findings include the superior performance of 1D-CNN models over other architectures, improved classification performance through transfer learning within the PTB-XL dataset, and mixed but promising results when transferring from synthetic to real data. The study contributes to the development of more accurate and efficient ECG analysis tools, addressing data privacy concerns in medical research and potentially improving cardiac disease diagnosis and patient care.  
 
 
 ## Links
