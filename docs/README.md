@@ -109,7 +109,7 @@ A series of experiments were conducted to identify the optimal model for both re
 
 For regression, **1D-CNN** demonstrated superior performance, particularly with the lowest Mean Absolute Error (MAE) across multiple ECG parameters (HR, QRS, PR, QT). The performance of all models is summarized in Table 1.
 
-#### Table 1: Regression Model Comparison
+##### Table 1: Regression Model Comparison
 <div align="center">
     
 | Model               | HR (Train MAE / Val MAE) | QRS (Train MAE / Val MAE) | PR (Train MAE / Val MAE) | QT (Train MAE / Val MAE) |
@@ -124,7 +124,7 @@ For regression, **1D-CNN** demonstrated superior performance, particularly with 
 
 For classification, the **1D-CNN** again outperformed other models, achieving the highest accuracy and AUC on both the training and validation sets (see Table 2).
 
-#### Table 2: Classification Model Comparison
+##### Table 2: Classification Model Comparison
 
 <div align="center">
     
@@ -138,43 +138,9 @@ For classification, the **1D-CNN** again outperformed other models, achieving th
 
 </div>
 
-### Transfer Learning within PTB-XL Dataset
+#### Transfer Learning within PTB-XL Dataset
 
 Following the model selection, transfer learning was applied using the **1D-CNN** model to improve classification performance. Transfer learning was first applied between subsets of the PTB-XL dataset, where models were initially trained on ECG parameters (HR, QRS, PR, QT) and then transferred for classification tasks. The results are summarized in Table 3.
-<!--
-#### Table 3: Transfer Learning Results (PTB-XL)
-
-<div align="center">
-    
-| Model               | Train Accuracy / AUC | Val Accuracy / AUC | Test Accuracy / AUC |
-|---------------------|----------------------|--------------------|---------------------|
-| **Baseline**        | 0.795 / 0.905        | 0.776 / 0.903      | 0.775 / 0.884       |
-| **Transfer HR**     | 0.831 / 0.946        | 0.752 / 0.894      | 0.787 / 0.892       |
-| **Transfer QRS**    | 0.802 / 0.915        | 0.791 / 0.892      | 0.785 / 0.906       |
-| **Transfer PR**     | 0.812 / 0.924        | 0.785 / 0.902      | 0.766 / 0.883       |
-| **Transfer QT**     | 0.838 / 0.949        | 0.808 / 0.901      | 0.783 / 0.893       |
-
-</div>
-
-### Transfer Learning from Deepfake Dataset to PTB-XL
-
-In the final set of experiments, transfer learning was applied by pretraining the **1D-CNN** model on a synthetic "deepfake dataset" before transferring it to the PTB-XL dataset for classification tasks. The performance of these models is shown in Table 4.
-
-#### Table 4: Transfer Learning Results (Deepfake to PTB-XL)
-
-<div align="center">
-    
-| Model               | Train Accuracy / AUC | Val Accuracy / AUC | Test Accuracy / AUC |
-|---------------------|----------------------|--------------------|---------------------|
-| **Baseline**        | 0.795 / 0.905        | 0.776 / 0.903      | 0.775 / 0.884       |
-| **Transfer HR**     | 0.801 / 0.904        | 0.785 / 0.906      | 0.764 / 0.887       |
-| **Transfer QRS**    | 0.822 / 0.933        | 0.777 / 0.897      | 0.783 / 0.876       |
-| **Transfer PR**     | 0.761 / 0.865        | 0.754 / 0.886      | 0.764 / 0.888       |
-| **Transfer QT**     | 0.806 / 0.912        | 0.765 / 0.913      | 0.778 / 0.895       |
-
-</div>
-
--->
 
 ## Conclusion 
 
